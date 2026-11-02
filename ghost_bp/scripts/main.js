@@ -1,5 +1,5 @@
 // =====================================================================
-//  GHOST MOD V3.2: MIND DIVE  -  Minecraft Bedrock add-on
+//  GHOST MOD V4: MIND REALM  -  Minecraft Bedrock add-on
 //  (works on phone, tablet, PC and console)
 //
 //  When a player dies they come back as a see-through black & white
@@ -573,12 +573,12 @@ function becomeGhost(p, fresh) {
 
 function sendHelp(p) {
   const lines = [
-    "§8========== §fGHOST MOD V3: MIND DIVE §8==========",
+    "§8========== §fGHOST MOD V4: MIND REALM §8==========",
     "§7You died and became a ghost. Tap your spectral tools:",
     "§fSpirit Reaper §7- drain the life of living players.  §fHaunting Hand §7- haunt blocks, tap air = Spirit Sense.",
     "§fWailing Bell §7- a terrifying wail.  §fSpectral Wisp §7- dash.  §fPhase Veil §7- drift through walls.",
     "§5CORPSES: §7mobs that die near you leave a corpse. Tap it to possess it instantly!",
-    "§dMIND DIVE: §7hit a LIVING mob with the §dMind Dive §7to enter its brain in another dimension.",
+    "§dMIND DIVE: §7hit a LIVING mob with the §dMind Dive §7to enter its brain in the §dMind Realm§7, a dimension of its own.",
     "§7  Beat its mind trial - §fSpirit Duel§7, §fMind Parkour§7, §fThought Maze §7or §fMemory Hunt§7 - to take its body.",
     "§7  Inside a body: tap §bits power§7, hit things with its strength. Leave with §fLeave Body §7or dismount.",
     `§bSoul Heart §7- revive once it recharges (${Math.round(CFG.reviveSeconds / 60)} min). Friends can revive you with a §6Golden Apple §7at your grave.`,

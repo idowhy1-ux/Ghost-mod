@@ -1,4 +1,4 @@
-# 👻 Ghost Mod V3.2: Mind Dive — a Minecraft Bedrock add-on
+# 👻 Ghost Mod V4: Mind Realm — a Minecraft Bedrock add-on
 
 When you die, you come back as a **see-through black-and-white ghost with bright white glowing eyes**. Ghosts haunt the living and take over mobs:
 
@@ -7,7 +7,7 @@ When you die, you come back as a **see-through black-and-white ghost with bright
 
 It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation and Switch. Everything is **tap to use**, so you don't need a keyboard.
 
-> **New in V3.2:** minds now open in **the Mind Realm**, a dimension of their own. They're no longer in The End, so **no more endermen** wander in. Nothing spawns in the Mind Realm except what the trial puts there.
+> **New in V4: Mind Realm:** minds now open in **the Mind Realm**, a dimension of their own. They're no longer in The End, so **no more endermen** wander in. Nothing spawns in the Mind Realm except what the trial puts there.
 >
 > **V3.1** added:
 > - 🎬 **Cinematic possession animations.**
@@ -19,12 +19,12 @@ It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation
 
 ## 📱 Install on your phone
 
-1. Download **[`dist/GhostModV3.2.mcaddon`](dist/GhostModV3.2.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
+1. Download **[`dist/GhostModV4.mcaddon`](dist/GhostModV4.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
 2. Open it:
    - **Android:** tap the file and choose **Minecraft**.
    - **iPhone/iPad:** open the **Files** app, tap the file, then tap **Share → Minecraft**.
-3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V3.2: Mind Dive (Behavior)**. The resource pack is turned on automatically.
-4. **V3.2 is an update to V3 / V3.1.** If the world still lists an older Ghost Mod, remove it and add V3.2. Only one version should be active at a time.
+3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V4: Mind Realm (Behavior)**. The resource pack is turned on automatically.
+4. **V4 updates V3 / V3.1 / V3.2 in place**, so ghosts, graves and corpses carry over. If the world still lists an older Ghost Mod, remove it and add V4. Only one version should be active at a time.
 5. Play. You **don't** need any experimental toggles.
 
 You need **Minecraft 1.26.30 or newer** (any version from June 2026 on). That's the first version that lets add-ons create their own dimension.
@@ -145,7 +145,7 @@ ghost_rp/                       resource pack: shroud and glowing eyes, bodies, 
 tools/generate_vessels.py       builds the 27 possessable bodies from Mojang's official vanilla packs
 tools/generate_minds.py         turns each mob's real head texture into block pixel art (ghost_bp/scripts/mind_heads.js)
 tools/generate_textures.py      regenerates the pixel-art textures (needs Pillow)
-tools/build.py                  packages dist/GhostModV3.1.mcaddon and the separate .mcpack files
+tools/build.py                  packages dist/GhostModV4.mcaddon and the separate .mcpack files
 ```
 
 - **Mind Realm:** a custom dimension (`ghost:mind_realm`) registered in `system.beforeEvents.startup` with `dimensionRegistry.registerCustomDimension`. It's a stable API since `@minecraft/server` 2.8.0.

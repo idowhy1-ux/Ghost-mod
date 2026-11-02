@@ -1,12 +1,12 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Ghost Mod V3.2: Mind Dive (Behavior)",
+    "name": "Ghost Mod V4: Mind Realm (Behavior)",
     "description": "Die and return as a ghost with glowing white eyes. Possess corpses, or breach a living mob's mind and beat its trial in the Mind Realm - the add-on's own dimension - inside a giant copy of its head!",
     "uuid": "d3f28076-ab87-4389-8f53-24869dc3f424",
     "version": [
-      3,
-      2,
+      4,
+      0,
       0
     ],
     "min_engine_version": [
@@ -20,8 +20,8 @@
       "type": "data",
       "uuid": "ef22df74-f9cd-4d57-bcad-4dcfd388a8bb",
       "version": [
-        3,
-        2,
+        4,
+        0,
         0
       ]
     },
@@ -31,8 +31,8 @@
       "uuid": "2a39b14d-9479-434b-b572-081422c50cb1",
       "entry": "scripts/main.js",
       "version": [
-        3,
-        2,
+        4,
+        0,
         0
       ]
     }
@@ -45,8 +45,8 @@
     {
       "uuid": "05d5c357-bcd2-4d49-b584-1bc5e6dfe75d",
       "version": [
-        3,
-        2,
+        4,
+        0,
         0
       ]
     }
