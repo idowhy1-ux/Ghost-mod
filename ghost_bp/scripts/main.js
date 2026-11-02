@@ -1,5 +1,5 @@
 // =====================================================================
-//  GHOST MOD V3: MIND DIVE  -  Minecraft Bedrock add-on
+//  GHOST MOD V3.1: MIND DIVE  -  Minecraft Bedrock add-on
 //  (works on phone, tablet, PC and console)
 //
 //  When a player dies they come back as a see-through black & white
@@ -9,7 +9,8 @@
 //    * a LIVING mob must be conquered from the inside: dive into its
 //      brain (you are pulled into another dimension) and beat its mind
 //      trial - a Spirit Duel, Mind Parkour, a Thought Maze or a Memory
-//      Hunt. Win and you wake up inside its body.
+//      Hunt - inside a giant copy of the mob's own head, built from its real
+//      face. Win and you wake up inside its body.
 //  Revive with the Soul Heart once it recharges, or when a friend offers
 //  a Golden Apple at your grave.
 //
@@ -18,7 +19,9 @@
 
 import {
   world, system, ItemStack, ItemLockMode, EquipmentSlot, GameMode, InputButton, ButtonState, BlockVolume,
+  EasingType, InputPermissionCategory,
 } from "@minecraft/server";
+import { HEADS } from "./mind_heads.js";
 
 // ----------------------------- settings ------------------------------
 const CFG = {
@@ -156,6 +159,8 @@ const lastHaunt = new Map();
 const possessions = new Map();   // playerId -> possession state
 const ownProjectiles = new Map(); // projectile id -> { effect, until }
 const dives = new Map();         // playerId -> mind dive state
+
+const cinemas = new Map();       // playerId -> camera animation in progress
 
 // ----------------------------- helpers -------------------------------
 const now = () => system.currentTick;
@@ -305,6 +310,121 @@ function spiritDamage(target, amount, source) {
       }, 10);
     }
   } catch { /* ignore */ }
+}
+
+// ---------------------------- cinematics ------------------------------
+// Camera animations use the built-in "minecraft:free" camera preset.
+const PINK = { red: 0.95, green: 0.45, blue: 0.7 };
+const WHITE = { red: 1, green: 1, blue: 1 };
+
+function vadd(a, b, k = 1) { return { x: a.x + b.x * k, y: a.y + b.y * k, z: a.z + b.z * k }; }
+function flatTo(from, to) {
+  const dx = to.x - from.x, dz = to.z - from.z, l = Math.sqrt(dx * dx + dz * dz) || 1;
+  return { x: dx / l, y: 0, z: dz / l };
+}
+function rotY(v, a) { const c = Math.cos(a), s = Math.sin(a); return { x: v.x * c - v.z * s, y: v.y, z: v.x * s + v.z * c }; }
+function forwardOf(e) {
+  try { const yaw = (e.getRotation().y * Math.PI) / 180; return { x: -Math.sin(yaw), y: 0, z: Math.cos(yaw) }; } catch { return { x: 0, y: 0, z: 1 }; }
+}
+function headOf(e, fallback) {
+  try { return e.getHeadLocation(); } catch { return fallback ?? { x: e.location.x, y: e.location.y + 1, z: e.location.z }; }
+}
+
+function cam(p, location, facing, time, type) {
+  const opts = { location, facingLocation: facing };
+  if (time) opts.easeOptions = { easeTime: time, easeType: (EasingType && EasingType[type]) ?? type };
+  try { p.camera.setCamera("minecraft:free", opts); return true; } catch { return false; }
+}
+function freeze(p, on) {
+  try { p.inputPermissions.setPermissionCategory(InputPermissionCategory.Movement, !on); return; } catch { /* older API */ }
+  try { p.inputPermissions.movementEnabled = !on; } catch { /* ignore */ }
+}
+function resetView(p) {
+  try { p.camera.clear(); } catch { /* ignore */ }
+  freeze(p, false);
+}
+function shake(p, intensity, seconds) { run(p, `camerashake add @s ${intensity} ${seconds} rotational`); }
+
+function helix(dim, base, t, height, radius = 0.9) {
+  for (let k = 0; k < 2; k++) {
+    const a = t * 0.45 + k * Math.PI;
+    particle(dim, "minecraft:soul_particle", { x: base.x + Math.cos(a) * radius, y: base.y + ((t * 0.08) % height), z: base.z + Math.sin(a) * radius });
+  }
+}
+function beam(dim, from, to, t, id = "minecraft:soul_particle") {
+  for (let i = 0; i < 6; i++) {
+    const f = (t * 0.07 + i / 6) % 1;
+    particle(dim, id, { x: from.x + (to.x - from.x) * f, y: from.y + (to.y - from.y) * f, z: from.z + (to.z - from.z) * f });
+  }
+}
+
+/** Soul Plunge: the camera swoops over a corpse, it rises with glowing eyes, and you dive into it. */
+function startSoulPlunge(p, body) {
+  if (cinemas.has(p.id) || dives.has(p.id) || !isCorpse(body)) return false;
+  if (phasing.has(p.id)) { flash(p, "§7Finish phasing first."); return false; }
+  if (possessions.has(p.id)) endPossession(p, "leave", true);
+  const from = p.getHeadLocation();
+  cinemas.set(p.id, { kind: "plunge", t0: now(), body, from });
+  freeze(p, true);
+  cam(p, from, { x: body.location.x, y: body.location.y + 0.4, z: body.location.z });
+  sound(body.dimension, "mob.evocation_illager.prepare_wololo", body.location, 1.2, 0.7);
+  return true;
+}
+
+/** Awakening: after conquering a mind, watch the body rise with your glowing eyes, then slip inside. */
+function startAwakening(p, body) {
+  cinemas.set(p.id, { kind: "awaken", t0: now(), body, from: p.getHeadLocation() });
+  freeze(p, true);
+  const head = headOf(body), f = forwardOf(body);
+  cam(p, { x: head.x + f.x * 3.4, y: head.y + 1.2, z: head.z + f.z * 3.4 }, head);
+}
+
+function endCinema(p) {
+  cinemas.delete(p.id);
+  resetView(p);
+}
+
+function cinemaTick(p, c, tick) {
+  const t = tick - c.t0;
+  const body = c.body;
+  if (!isValid(body)) { endCinema(p); if (isGhost(p) && !possessions.has(p.id)) giveGhostTools(p); return; }
+  const dim = body.dimension;
+  const head = headOf(body);
+  const mid = { x: body.location.x, y: body.location.y + 0.4, z: body.location.z };
+  if (c.kind === "plunge") {
+    if (t === 1) {
+      const away = flatTo(head, c.from);
+      cam(p, { x: head.x + away.x * 2.6, y: head.y + 2.4, z: head.z + away.z * 2.6 }, mid, 0.7, "InOutCubic");
+    }
+    if (t < 16) beam(dim, c.from, mid, t);
+    if (t === 14) {
+      if (!possess(p, body)) { endCinema(p); return; } // the corpse rises, its eyes ignite
+      sound(dim, "mob.zombie.unfect", body.location, 1.4, 0.7);
+      shake(p, 0.2, 0.8);
+    }
+    if (t === 17) {
+      const f = forwardOf(body);
+      cam(p, { x: head.x + f.x * 2.4, y: head.y + 0.4, z: head.z + f.z * 2.4 }, head, 0.9, "InOutSine");
+    }
+    if (t >= 14 && t < 36 && t % 2 === 0) helix(dim, body.location, t, 2.2, 0.7);
+    if (t === 37) cam(p, head, vadd(head, forwardOf(body), 6), 0.3, "InQuad");
+    if (t === 42) fade(p, 0.05, 0.15, 0.5, WHITE);
+    if (t >= 44) endCinema(p);
+  } else if (c.kind === "awaken") {
+    if (t === 4) {
+      if (!possess(p, body)) { endCinema(p); giveGhostTools(p); return; }
+      sound(dim, "mob.zombie.unfect", body.location, 1.0, 0.8);
+      shake(p, 0.3, 1.0);
+    }
+    if (t >= 4 && t < 32 && t % 2 === 0) helix(dim, body.location, t, 2.4, 0.8);
+    if (t === 9) {
+      const f = forwardOf(body);
+      cam(p, { x: head.x + f.x * 2.2, y: head.y + 0.3, z: head.z + f.z * 2.2 }, head, 1.2, "InOutSine");
+    }
+    if (t === 35) cam(p, head, vadd(head, forwardOf(body), 6), 0.35, "InQuad");
+    if (t === 41) fade(p, 0.05, 0.15, 0.5, WHITE);
+    if (t >= 43) endCinema(p);
+  }
 }
 
 // ------------------------- ghost inventory --------------------------
@@ -565,6 +685,7 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   const p = ev.player;
   system.runTimeout(() => {
     if (!isValid(p)) return;
+    if (!dives.has(p.id)) { cinemas.delete(p.id); resetView(p); }
     if (p.getDynamicProperty(DP.pending) === true) {
       p.setDynamicProperty(DP.pending, false);
       becomeGhost(p, true);
@@ -1329,7 +1450,7 @@ function startDive(p, mob) {
   if (possessions.has(p.id)) { flash(p, "§7Leave your body before diving into another mind."); return; }
   if (phasing.has(p.id)) return;
   if (isPlayer(mob)) { flash(p, "§7A living player's mind is far too strong to enter."); return; }
-  if (isCorpse(mob)) { possess(p, mob); return; }
+  if (isCorpse(mob)) { startSoulPlunge(p, mob); return; }
   const key = MOB_TO_BODY[mob.typeId];
   if (!key) { flash(p, "§7This creature's mind is too strange to enter."); return; }
   if (mob.hasTag(ENTRANCED_TAG)) { flash(p, "§7Another spirit is already inside its mind."); return; }
@@ -1352,13 +1473,64 @@ function startDive(p, mob) {
   dives.set(p.id, d);
   p.setDynamicProperty(DP.dive, JSON.stringify({ mobId: mob.id, ret }));
 
+  // Mind Breach: the camera circles the entranced mob and plunges into its eyes
+  d.camFrom = p.getHeadLocation();
+  freeze(p, true);
+  cam(p, d.camFrom, headOf(mob));
   burst(mob.dimension, "minecraft:soul_particle", { x: mob.location.x, y: mob.location.y + 1, z: mob.location.z }, 12, 1.5);
   sound(mob.dimension, "mob.elderguardian.curse", mob.location, 0.8, 0.6);
-  fade(p, 0.4, 1.8, 1.0);
-  title(p, `§dDiving into the mind of the ${def.name}...`, `§7${TRIALS[d.trial].name}`, 50);
+  title(p, `§dBreaching the mind of the ${def.name}...`, `§7${TRIALS[d.trial].name}`, 60);
   // leave the ghost form behind: inside a mind you appear as your living self
   removeGhostTools(p);
   for (const e of ["levitation", "slow_falling", "invisibility"]) { try { p.removeEffect(e); } catch { /* ignore */ } }
+}
+
+function breachTick(p, d, tick) {
+  const t = tick - d.t0;
+  const mob = getEntity(d.mobId);
+  const dim = mob?.dimension ?? world.getDimension(d.ret.dim);
+  const head = mob ? headOf(mob) : { x: d.ret.x, y: d.ret.y + 1.6, z: d.ret.z };
+  if (t === 1) {
+    const side = rotY(flatTo(head, d.camFrom), 0.7);
+    d.shot = { x: head.x + side.x * 2.8, y: head.y + 0.7, z: head.z + side.z * 2.8 };
+    cam(p, d.shot, head, 1.0, "InOutCubic");
+    sound(dim, "mob.warden.heartbeat", head, 0.8, 1);
+  }
+  if (t === 21 && d.shot) {
+    const off = rotY({ x: d.shot.x - head.x, y: 0, z: d.shot.z - head.z }, -1.5);
+    cam(p, { x: head.x + off.x, y: head.y + 0.2, z: head.z + off.z }, head, 0.8, "InOutSine");
+    sound(dim, "mob.warden.sonic_charge", head, 1.0, 1);
+    shake(p, 0.25, 1.4);
+  }
+  if (t === 37) {
+    let look = { x: 0, y: 0, z: 1 };
+    try { if (mob) look = mob.getViewDirection(); } catch { /* ignore */ }
+    cam(p, head, vadd(head, look, 6), 0.45, "InExpo");
+    fade(p, 0.4, 2.2, 1.0, PINK);
+  }
+  if (t === 42) {
+    particle(dim, "minecraft:sonic_explosion", head);
+    sound(dim, "mob.warden.sonic_boom", head, 1.2, 0.8);
+  }
+  if (mob && t < 37) {
+    helix(dim, mob.location, t, 2.4);
+    if (t < 21 && t % 2 === 0) beam(dim, d.camFrom, head, t);
+    if (t >= 21) {
+      burst(dim, "minecraft:electric_spark_particle", head, 2, 1);
+      if (t % 2 === 0) {                       // the entranced body shivers
+        try {
+          const at = JSON.parse(String(mob.getDynamicProperty(DP.freezeAt)));
+          const j = (t % 4 === 0 ? 0.07 : -0.07);
+          mob.teleport({ x: at.x + j, y: at.y, z: at.z - j });
+        } catch { /* ignore */ }
+      }
+    }
+  }
+  if (t >= 48) {
+    try { p.camera.clear(); } catch { /* ignore */ }
+    d.phase = "loading";
+    try { p.teleport({ x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 }, { dimension: world.getDimension(MIND.dim) }); } catch { /* ignore */ }
+  }
 }
 
 function areaLoaded(dim, C) {
@@ -1386,28 +1558,54 @@ function put(dim, x, y, z, block) {
 
 function clearArena(dim, C) {
   const r = MIND.reach + 2;
-  for (let y = C.y - 8; y <= C.y + 20; y += 10) {
-    fill(dim, { x: C.x - r, y, z: C.z - r }, { x: C.x + r, y: Math.min(y + 9, C.y + 20), z: C.z + r }, "minecraft:air");
+  const top = C.y + ROOM + 2;
+  for (let y = C.y - 8; y <= top; y += 10) {
+    fill(dim, { x: C.x - r, y, z: C.z - r }, { x: C.x + r, y: Math.min(y + 9, top), z: C.z + r }, "minecraft:air");
   }
   try {
     for (const e of dim.getEntities({ location: C, maxDistance: MIND.reach * 1.8 })) if (!isPlayer(e)) e.remove();
   } catch { /* ignore */ }
 }
 
-function disk(dim, cx, y, cz, r, palette) {
-  for (let x = -r; x <= r; x++) {
-    for (let z = -r; z <= r; z++) {
-      if (x * x + z * z <= r * r + r) put(dim, cx + x, y, cz + z, (x * 3 + z * 7 + ((x * z) & 3)) % 5 === 0 ? palette[1] : (x + z) % 7 === 0 ? palette[2] : palette[0]);
-    }
-  }
+// ---- the giant head: every mind is a hollow copy of the mob's own head ----
+const ROOM = 32;
+const B64 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
+
+function headBounds(C) {
+  return { x0: C.x - 16, x1: C.x + 15, z0: C.z - 16, z1: C.z + 15, y0: C.y, y1: C.y + ROOM - 1 };
 }
 
-function ring(dim, cx, y0, cz, r, height, block) {
-  for (let a = 0; a < 360; a += 3) {
-    const x = Math.round(cx + Math.cos((a * Math.PI) / 180) * r);
-    const z = Math.round(cz + Math.sin((a * Math.PI) / 180) * r);
-    fill(dim, { x, y: y0, z }, { x, y: y0 + height - 1, z }, block);
+function mindPalette(d) {
+  return HEADS[d.key]?.colors ?? d.def.palette ?? BRAIN;
+}
+
+/** Builds the six faces of the mob's head (from its real texture) as a 32-block room. */
+function buildHead(dim, d) {
+  const H = HEADS[d.key];
+  const b = headBounds(d.C);
+  if (!H) {
+    for (const [a, z] of [[b.z0, b.z0], [b.z1, b.z1]]) fill(dim, { x: b.x0, y: b.y0, z: a }, { x: b.x1, y: b.y1, z }, BRAIN[0]);
+    for (const x of [b.x0, b.x1]) fill(dim, { x, y: b.y0, z: b.z0 }, { x, y: b.y1, z: b.z1 }, BRAIN[1]);
+    for (const y of [b.y0, b.y1]) fill(dim, { x: b.x0, y, z: b.z0 }, { x: b.x1, y, z: b.z1 }, BRAIN[2]);
+    return;
   }
+  const span = (i, n) => [Math.floor((i * ROOM) / n), Math.floor(((i + 1) * ROOM) / n) - 1];
+  const face = (name, place) => {
+    const [w, h, px] = H.faces[name];
+    for (let r = 0; r < h; r++) {
+      for (let c = 0; c < w; c++) {
+        const [a0, a1] = span(c, w), [r0, r1] = span(r, h);
+        place(a0, a1, r0, r1, H.pal[B64.indexOf(px[r * w + c])]);
+      }
+    }
+  };
+  // walls read left-to-right as seen from inside the head (like looking at the mob's face)
+  face("north", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x0 + a0, y: b.y1 - r1, z: b.z0 }, { x: b.x0 + a1, y: b.y1 - r0, z: b.z0 }, bl));
+  face("south", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x1 - a1, y: b.y1 - r1, z: b.z1 }, { x: b.x1 - a0, y: b.y1 - r0, z: b.z1 }, bl));
+  face("east", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x1, y: b.y1 - r1, z: b.z0 + a0 }, { x: b.x1, y: b.y1 - r0, z: b.z0 + a1 }, bl));
+  face("west", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x0, y: b.y1 - r1, z: b.z1 - a1 }, { x: b.x0, y: b.y1 - r0, z: b.z1 - a0 }, bl));
+  face("up", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x0 + a0, y: b.y1, z: b.z0 + ROOM - 1 - r1 }, { x: b.x0 + a1, y: b.y1, z: b.z0 + ROOM - 1 - r0 }, bl));
+  face("down", (a0, a1, r0, r1, bl) => fill(dim, { x: b.x0 + a0, y: b.y0, z: b.z0 + r0 }, { x: b.x0 + a1, y: b.y0, z: b.z0 + r1 }, bl));
 }
 
 function core(dim, x, y, z) {
@@ -1417,18 +1615,11 @@ function core(dim, x, y, z) {
 
 // --- the four mind trials ---
 function buildDuel(p, d, dim) {
+  // the spirit waits in front of its own giant face; the head walls seal you in together
   const { C } = d;
-  const pal = d.def.palette ?? BRAIN;
-  disk(dim, C.x, C.y, C.z, 10, pal);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    put(dim, Math.round(C.x + Math.cos(a) * 7), C.y, Math.round(C.z + Math.sin(a) * 7), "minecraft:sea_lantern");
-  }
-  ring(dim, C.x, C.y + 1, C.z, 11, 7, "minecraft:barrier");
-  for (let x = -11; x <= 11; x++) for (let z = -11; z <= 11; z++) if (x * x + z * z <= 132) put(dim, C.x + x, C.y + 8, C.z + z, "minecraft:barrier");
-  d.start = { x: C.x - 7 + 0.5, y: C.y + 1, z: C.z + 0.5 };
-  d.face = { x: C.x + 7, y: C.y + 1, z: C.z };
-  const s = dim.spawnEntity(BODY_TO_MOB[d.key], { x: C.x + 7.5, y: C.y + 1, z: C.z + 0.5 });
+  d.start = { x: C.x + 0.5, y: C.y + 1, z: C.z + 8.5 };
+  d.face = { x: C.x + 0.5, y: C.y + 2, z: C.z - 6.5 };
+  const s = dim.spawnEntity(BODY_TO_MOB[d.key], { x: C.x + 0.5, y: C.y + 1, z: C.z - 6.5 });
   s.nameTag = `§fSpirit of the ${d.def.name}`;
   s.addTag(SPIRIT_TAG);
   s.setDynamicProperty(DP.owner, p.id);
@@ -1439,9 +1630,10 @@ function buildDuel(p, d, dim) {
 
 function buildParkour(p, d, dim) {
   // a rising spiral of floating thoughts around the centre, ending at the Brain Core
+  // floating thoughts spiral up inside the head - touching the floor of its mind costs a try
   const { C } = d;
-  const pal = d.def.palette ?? BRAIN;
-  let ang = 0, r = 13, y = C.y;
+  const pal = mindPalette(d);
+  let ang = 0, r = 13, y = C.y + 3;
   let px = Math.round(C.x + r), pz = C.z;
   fill(dim, { x: px - 1, y, z: pz - 1 }, { x: px + 1, y, z: pz + 1 }, pal[0]);
   d.start = { x: px + 0.5, y: y + 1, z: pz + 0.5 };
@@ -1449,7 +1641,7 @@ function buildParkour(p, d, dim) {
   const steps = 12;
   for (let i = 1; i <= steps + 1; i++) {
     const last = i === steps + 1;
-    const up = !last && Math.random() < 0.5 && y < C.y + 9 ? 1 : 0;
+    const up = !last && Math.random() < 0.5 && y < C.y + 12 ? 1 : 0;
     ang += (up ? 2.6 : pick([2.8, 3.2, 3.6])) / r;
     r = Math.max(8, r - 0.45);
     let nx = Math.round(C.x + Math.cos(ang) * r), nz = Math.round(C.z + Math.sin(ang) * r);
@@ -1478,10 +1670,9 @@ function buildParkour(p, d, dim) {
 
 function buildMaze(p, d, dim) {
   const { C } = d;
-  const pal = d.def.palette ?? BRAIN;
+  const pal = mindPalette(d);
   const N = 7, cell = 3, size = N * cell + 1;
   const ox = C.x - Math.floor(size / 2), oz = C.z - Math.floor(size / 2);
-  fill(dim, { x: ox, y: C.y, z: oz }, { x: ox + size - 1, y: C.y, z: oz + size - 1 }, pal[1]);
   // walls everywhere, then carve passages with a randomised depth-first search
   const open = new Set();
   const key = (cx, cz) => `${cx},${cz}`;
@@ -1510,7 +1701,6 @@ function buildMaze(p, d, dim) {
         wall = cz < 0 || cz >= N - 1 || !open.has(`${cx},${cz},z`);
       }
       if (wall) fill(dim, { x: ox + gx, y: C.y + 1, z: oz + gz }, { x: ox + gx, y: C.y + 3, z: oz + gz }, (gx + gz) % 4 === 0 ? pal[2] : pal[0]);
-      else if ((gx * 7 + gz * 3) % 11 === 0) put(dim, ox + gx, C.y, oz + gz, "minecraft:sea_lantern");
     }
   }
   d.start = { x: ox + 2, y: C.y + 1, z: oz + 2 };
@@ -1522,9 +1712,7 @@ function buildMaze(p, d, dim) {
 
 function buildMemories(p, d, dim) {
   const { C } = d;
-  const pal = d.def.palette ?? BRAIN;
-  disk(dim, C.x, C.y, C.z, 12, pal);
-  ring(dim, C.x, C.y + 1, C.z, 13, 4, "minecraft:barrier");
+  const pal = mindPalette(d);
   const spots = [];
   for (let i = 0; i < 4; i++) {          // raised "lobes" with steps up to them
     const a = (i / 4) * Math.PI * 2 + 0.4;
@@ -1551,15 +1739,36 @@ const BUILDERS = { duel: buildDuel, parkour: buildParkour, maze: buildMaze, memo
 
 function enterMind(p, d, dim) {
   clearArena(dim, d.C);
+  buildHead(dim, d);
   BUILDERS[d.trial](p, d, dim);
   try { p.teleport(d.start, { dimension: dim, facingLocation: d.face }); } catch { /* ignore */ }
   giveMindTools(p, d.trial);
   applyMindEffects(p);
-  d.phase = "running";
-  d.until = now() + TRIALS[d.trial].time * 20;
+  // establishing shot: high inside the giant head, facing its face, then down into your own eyes
+  d.phase = "intro";
+  d.t1 = now();
+  freeze(p, true);
+  const b = headBounds(d.C);
+  cam(p, { x: d.C.x + 0.5, y: d.C.y + 24, z: d.C.z + 10 }, { x: d.C.x + 0.5, y: d.C.y + 15, z: b.z0 });
+  fade(p, 0, 0.3, 1.4);
   flashes.delete(p.id);
-  title(p, `§d${TRIALS[d.trial].name}`, `§f${TRIALS[d.trial].goal(d.def.name)}`, 70);
+  title(p, `§dInside the mind of the ${d.def.name}`, `§f${TRIALS[d.trial].name}: §7${TRIALS[d.trial].goal(d.def.name)}`, 80);
   try { p.playSound("beacon.activate", { pitch: 0.7 }); } catch { /* ignore */ }
+  if (d.def.sound) sound(dim, d.def.sound, { x: d.C.x, y: d.C.y + 10, z: b.z0 + 2 }, 0.6, 1.5);
+}
+
+function introTick(p, d, tick) {
+  const t = tick - d.t1;
+  if (t === 2) {
+    const eye = { x: d.start.x, y: d.start.y + 1.62, z: d.start.z };
+    cam(p, eye, { x: d.face.x, y: d.face.y + 1, z: d.face.z }, 2.2, "InOutCubic");
+  }
+  if (t >= 48) {
+    resetView(p);
+    d.phase = "running";
+    d.until = now() + TRIALS[d.trial].time * 20;
+    flash(p, "§d§lGO!", 20);
+  }
 }
 
 function hurtMind(p, d, by) {
@@ -1592,11 +1801,16 @@ function runTrial(p, d, tick) {
   if (tick % 20 === 0) applyMindEffects(p);
   const loc = p.location;
 
-  if (loc.y < d.C.y - 6) {
+  const slipped = d.trial === "parkour" ? loc.y < d.C.y + 2.2 : loc.y < d.C.y - 2;
+  if (tick % 100 === 50 && d.def.sound) {   // its thoughts echo around the head
+    const b = headBounds(d.C);
+    sound(p.dimension, d.def.sound, { x: pick([b.x0 + 2, b.x1 - 2]), y: d.C.y + 8, z: pick([b.z0 + 2, b.z1 - 2]) }, 0.5, 1.2);
+  }
+  if (slipped) {
     if (d.trial === "parkour") {
       d.lives -= 1;
       if (d.lives <= 0) { endDive(p, "fail", "§cYou fell out of its thoughts!"); return; }
-      flash(p, `§cYou slipped! §f${d.lives} §ctr${d.lives === 1 ? "y" : "ies"} left`, 50);
+      flash(p, `§cYou touched the floor of its mind! §f${d.lives} §ctr${d.lives === 1 ? "y" : "ies"} left`, 50);
     }
     try { p.teleport(d.checkpoint ?? d.start, { dimension: p.dimension }); } catch { /* ignore */ }
     return;
@@ -1687,6 +1901,7 @@ function endDive(p, result, message) {
   }
   removeItems(p, (id) => id === T.escape || id === T.reaper);
   applyGhostEffects(p);
+  resetView(p);
   try {
     p.teleport({ x: d.ret.x, y: d.ret.y + 0.5, z: d.ret.z }, { dimension: world.getDimension(d.ret.dim) });
   } catch { /* ignore */ }
@@ -1717,7 +1932,8 @@ function finishDive(p, d, mob) {
     } catch { /* ignore */ }
     system.runTimeout(() => {
       if (!isValid(p)) return;
-      if (!(body && possess(p, body))) giveGhostTools(p);
+      if (body && isValid(body)) startAwakening(p, body);
+      else giveGhostTools(p);
     }, 2);
   } else {
     if (mob) release(mob, d.result === "fail" ? MIND.guardMs : 15000);
@@ -1734,11 +1950,9 @@ function returnTick(p, d, tick) {
 
 function diveTick(p, d, tick) {
   if (d.phase === "entering") {
-    if (tick - d.t0 >= 10) {
-      d.phase = "loading";
-      try { p.teleport({ x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 }, { dimension: world.getDimension(MIND.dim) }); } catch { /* ignore */ }
-    }
+    breachTick(p, d, tick);
   } else if (d.phase === "loading") {
+    if (tick - d.t0 > 80 && (tick - d.t0) % 30 === 0) fade(p, 0, 1.6, 0.4); // stay dark while the mind builds
     const dim = world.getDimension(MIND.dim);
     const hover = { x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 };
     const away = p.dimension.id !== MIND.dim;
@@ -1747,6 +1961,8 @@ function diveTick(p, d, tick) {
     }
     if (p.dimension.id === MIND.dim && tick - d.t0 > 20 && areaLoaded(dim, d.C)) enterMind(p, d, dim);
     else if (tick - d.t0 > MIND.loadTicks) endDive(p, "abort", "§7The mind would not open. Try again.");
+  } else if (d.phase === "intro") {
+    introTick(p, d, tick);
   } else if (d.phase === "running") {
     runTrial(p, d, tick);
     if (dives.get(p.id)?.phase === "running" && tick % 5 === 0) diveHud(p, d);
@@ -1762,6 +1978,7 @@ function abandonDive(p) {
   teardown(d);
   dives.delete(p.id);
   p.setDynamicProperty(DP.dive, undefined);
+  resetView(p);
   const mob = getEntity(d.mobId);
   if (mob) release(mob, 0);
 }
@@ -1776,6 +1993,7 @@ function recoverDive(p) {
   if (p.dimension.id === MIND.dim && info?.ret) {
     try { p.teleport({ x: info.ret.x, y: info.ret.y + 0.5, z: info.ret.z }, { dimension: world.getDimension(info.ret.dim) }); } catch { /* ignore */ }
   }
+  resetView(p);
   giveGhostTools(p);
   flash(p, "§7You wake from the mind you were exploring.", 60);
   return true;
@@ -1807,7 +2025,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
   const p = ev.source;
   if (!isPlayer(p) || !ev.itemStack) return;
   const id = ev.itemStack.typeId;
-  if (!id.startsWith("ghost:") || !isGhost(p)) return;
+  if (!id.startsWith("ghost:") || !isGhost(p) || cinemas.has(p.id)) return;
   switch (id) {
     case T.reaper: reapSweep(p); break;
     case T.hand: if (ready(p, "sense", "Spirit Sense")) { useCooldown(p, "sense"); spiritSense(p); } break;
@@ -1863,14 +2081,14 @@ world.afterEvents.entityHitEntity.subscribe((ev) => {
     return;
   }
   const p = attacker;
-  if (!isPlayer(p) || !isGhost(p)) return;
+  if (!isPlayer(p) || !isGhost(p) || cinemas.has(p.id)) return;
   const d = dives.get(p.id);
   if (d) {
     if (d.phase === "running" && d.trial === "duel" && target.id === d.spiritId) strikeSpirit(p, d, target);
     else if (d.phase === "running" && target.typeId === MEMORY) collectMemory(p, d, target);
     return;
   }
-  if (isCorpse(target)) { possess(p, target); return; }
+  if (isCorpse(target)) { startSoulPlunge(p, target); return; }
   if (target.typeId === GRAVESTONE || (isPlayer(target) && isGhost(target))) return;
   const st = possessions.get(p.id);
   if (st) {
@@ -1901,7 +2119,7 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   const g = ev.target;
   if (!g) return;
   if (isCorpse(g)) {
-    if (isGhost(p) && !dives.has(p.id)) possess(p, g);
+    if (isGhost(p) && !dives.has(p.id)) startSoulPlunge(p, g);
     return;
   }
   if (g.typeId !== GRAVESTONE) return;
@@ -1976,7 +2194,7 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
 // ----------------------------- main loop ------------------------------
 function hud(p) {
   const f = flashes.get(p.id);
-  if (f && f.until > now()) return;
+  if ((f && f.until > now()) || cinemas.has(p.id)) return;
   const parts = [];
   const st = possessions.get(p.id);
   if (st && isValid(st.body)) {
@@ -2002,6 +2220,8 @@ function hud(p) {
 }
 
 function ghostTick(p, tick) {
+  const c = cinemas.get(p.id);
+  if (c) cinemaTick(p, c, tick);
   const d = dives.get(p.id);
   if (d) { diveTick(p, d, tick); return; }
   const st = possessions.get(p.id);
@@ -2170,4 +2390,5 @@ world.afterEvents.playerLeave.subscribe((ev) => {
   cooldowns.delete(ev.playerId);
   phasing.delete(ev.playerId);
   flashes.delete(ev.playerId);
+  cinemas.delete(ev.playerId);
 });
