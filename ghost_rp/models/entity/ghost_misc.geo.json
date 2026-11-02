@@ -2,37 +2,157 @@
   "format_version": "1.12.0",
   "minecraft:geometry": [
     {
-      "description": { "identifier": "geometry.ghost.empty", "texture_width": 16, "texture_height": 16 },
-      "bones": [ { "name": "root", "pivot": [0, 0, 0] } ]
-    },
-    {
       "description": {
-        "identifier": "geometry.ghost_shroud.eyes",
-        "texture_width": 16, "texture_height": 16,
-        "visible_bounds_width": 3, "visible_bounds_height": 3, "visible_bounds_offset": [0, 1.5, 0]
+        "identifier": "geometry.ghost.empty",
+        "texture_width": 16,
+        "texture_height": 16
       },
       "bones": [
-        { "name": "body", "pivot": [0, 24, 0] },
-        { "name": "head", "parent": "body", "pivot": [0, 24, 0],
-          "cubes": [
-            { "origin": [-3, 27.5, -4.9], "size": [2, 1.5, 0.1], "uv": [0, 0] },
-            { "origin": [1, 27.5, -4.9], "size": [2, 1.5, 0.1], "uv": [0, 0] }
-          ] }
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        }
       ]
     },
     {
       "description": {
-        "identifier": "geometry.ghost.lost_soul.eyes",
-        "texture_width": 16, "texture_height": 16,
-        "visible_bounds_width": 2, "visible_bounds_height": 2.5, "visible_bounds_offset": [0, 1, 0]
+        "identifier": "geometry.ghost_shroud.eyes",
+        "texture_width": 16,
+        "texture_height": 16,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
       },
       "bones": [
-        { "name": "root", "pivot": [0, 0, 0] },
-        { "name": "body", "parent": "root", "pivot": [0, 10, 0],
+        {
+          "name": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
           "cubes": [
-            { "origin": [-2, 17, -3.15], "size": [1, 1, 0.1], "uv": [0, 0] },
-            { "origin": [1, 17, -3.15], "size": [1, 1, 0.1], "uv": [0, 0] }
-          ] }
+            {
+              "origin": [
+                -3,
+                27.5,
+                -4.9
+              ],
+              "size": [
+                2,
+                1.5,
+                0.1
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                1,
+                27.5,
+                -4.9
+              ],
+              "size": [
+                2,
+                1.5,
+                0.1
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": {
+        "identifier": "geometry.ghost.memory",
+        "texture_width": 32,
+        "texture_height": 16,
+        "visible_bounds_width": 1.5,
+        "visible_bounds_height": 1.5,
+        "visible_bounds_offset": [
+          0,
+          0.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "orb",
+          "pivot": [
+            0,
+            5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3,
+                2,
+                -3
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "spark",
+          "parent": "orb",
+          "pivot": [
+            0,
+            5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -1.5,
+                3.5,
+                -1.5
+              ],
+              "size": [
+                3,
+                3,
+                3
+              ],
+              "uv": [
+                24,
+                0
+              ],
+              "inflate": 1.2
+            }
+          ]
+        }
       ]
     }
   ]

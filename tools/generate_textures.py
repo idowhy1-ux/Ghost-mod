@@ -1,4 +1,4 @@
-"""Generates all Ghost Mod V2 textures (black & white, semi-transparent, glowing white eyes).
+"""Generates all Ghost Mod textures (black & white, semi-transparent, glowing white eyes).
 
 Run:  python3 tools/generate_textures.py
 Requires Pillow.  Edit the pixel maps below to restyle anything.
@@ -71,25 +71,19 @@ def ghost_eyes():
     save(Image.new("RGBA", (16, 16), (255, 255, 255, 255)), RP, "textures", "entity", "ghost_eyes.png")
 
 
-# ------------------------------------------------------------- lost soul
-def lost_soul():
-    img = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+# ---------------------------------------------------------- memory orb
+# A glowing memory floating in the mind realm (rendered full-bright).
+def memory():
+    img = Image.new("RGBA", (32, 16), (0, 0, 0, 0))
     px = img.load()
-
-    def fill(x0, y0, w, h, base, alpha):
-        for y in range(y0, y0 + h):
-            for x in range(x0, x0 + w):
-                px[x, y] = gray(base + random.randint(-18, 18), alpha + random.randint(-15, 10))
-
-    fill(0, 0, 24, 12, 90, 175)    # head
-    fill(24, 0, 16, 6, 120, 140)   # arms
-    fill(0, 12, 20, 10, 110, 150)  # torso
-    fill(20, 12, 14, 7, 170, 110)  # tail 1
-    fill(34, 12, 8, 5, 215, 70)    # tail 2 (white wisp)
-    for y in range(7, 12):         # black face under the glowing eyes
-        for x in range(6, 12):
-            px[x, y] = gray(8, 235)
-    save(img, RP, "textures", "entity", "lost_soul.png")
+    for y in range(0, 12):              # outer orb (6x6x6 box at uv 0,0)
+        for x in range(0, 24):
+            v = random.randint(0, 40)
+            px[x, y] = (255, 170 + v, 225 + v // 3, 255)
+    for y in range(0, 6):               # bright white spark (3x3x3 box at uv 24,0)
+        for x in range(24, 32):
+            px[x, y] = (255, 255, 255, 255)
+    save(img, RP, "textures", "entity", "memory.png")
 
 
 # ------------------------------------------------------------ gravestone
@@ -140,9 +134,49 @@ PALETTE = {
     "g": gray(170, 110),
     "B": (120, 220, 235, 255),  # soul-fire cyan accent
     "b": (60, 150, 170, 255),
+    "P": (240, 140, 190, 255),  # brain pink
+    "p": (190, 80, 140, 255),
+    "R": (150, 40, 60, 255),    # exit red
+    "r": (220, 70, 80, 255),
 }
 
 ICONS = {
+    "mind_dive": [
+        "................",
+        ".....pPPPp......",
+        "...pPPpPPPPp....",
+        "..pPPPPpPPpPp...",
+        ".pPpPPPPpPPPPp..",
+        ".pPPpPKKKKpPPp..",
+        ".pPPPKKWWKKpPp..",
+        ".pPpPKWWWWKPPp..",
+        "..pPPKKWWKKPp...",
+        "..pPpPKKKKpPp...",
+        "...pPPPpPPPp....",
+        "....ppPPPpp.....",
+        "......pPp.......",
+        ".......ww.......",
+        "......w..w......",
+        ".....w....w.....",
+    ],
+    "escape_mind": [
+        "................",
+        "....RRRRRRRR....",
+        "....RKKKKKKR....",
+        "....RKrrrrKR....",
+        "....RKr..rKR....",
+        "....RKr..rKR..W.",
+        "....RKr..rKR.WW.",
+        "....RKr..WWWWWWW",
+        "....RKr..rKR.WW.",
+        "....RKr..rKR..W.",
+        "....RKr..rKR....",
+        "....RKrrrrKR....",
+        "....RKKKKKKR....",
+        "....RRRRRRRR....",
+        "................",
+        "................",
+    ],
     "spirit_reaper": [
         "................",
         "....WWWWWW......",
@@ -344,7 +378,7 @@ def pack_icon():
 if __name__ == "__main__":
     ghost_shroud()
     ghost_eyes()
-    lost_soul()
+    memory()
     gravestone()
     items()
     pack_icon()

@@ -1,0 +1,20 @@
+{
+  "format_version": "1.20.80",
+  "minecraft:item": {
+    "description": {
+      "identifier": "ghost:mind_dive",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "texture": "ghost_mind_dive"
+      },
+      "minecraft:display_name": {
+        "value": "\u00a7dMind Dive"
+      },
+      "minecraft:max_stack_size": 1
+    }
+  }
+}

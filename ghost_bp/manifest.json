@@ -1,28 +1,54 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Ghost Mod V2: Possession (Behavior)",
-    "description": "Die and return as a ghost with glowing white eyes! Possess mob corpses and use their powers, hunt lost souls and haunted blocks, scare the living, and earn your way back to life.",
-    "uuid": "5f13b972-297d-42b3-9dfe-ce41a640bba0",
-    "version": [2, 0, 0],
-    "min_engine_version": [1, 26, 0]
+    "name": "Ghost Mod V3: Mind Dive (Behavior)",
+    "description": "Die and return as a ghost with glowing white eyes. Possess corpses instantly, or dive into a living mob's brain and beat its mind trial to take over its body!",
+    "uuid": "d3f28076-ab87-4389-8f53-24869dc3f424",
+    "version": [
+      3,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      0
+    ]
   },
   "modules": [
     {
       "type": "data",
-      "uuid": "0fd71440-3c44-4627-a67f-88097ab1ef2f",
-      "version": [2, 0, 0]
+      "uuid": "ef22df74-f9cd-4d57-bcad-4dcfd388a8bb",
+      "version": [
+        3,
+        0,
+        0
+      ]
     },
     {
       "type": "script",
       "language": "javascript",
-      "uuid": "20c8a965-dff8-40e7-813c-935dc436490b",
+      "uuid": "2a39b14d-9479-434b-b572-081422c50cb1",
       "entry": "scripts/main.js",
-      "version": [2, 0, 0]
+      "version": [
+        3,
+        0,
+        0
+      ]
     }
   ],
   "dependencies": [
-    { "module_name": "@minecraft/server", "version": "1.19.0" },
-    { "uuid": "3403b7c4-fbe5-4866-873f-fae9f30db91c", "version": [2, 0, 0] }
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.19.0"
+    },
+    {
+      "uuid": "05d5c357-bcd2-4d49-b584-1bc5e6dfe75d",
+      "version": [
+        3,
+        0,
+        0
+      ]
+    }
   ]
 }

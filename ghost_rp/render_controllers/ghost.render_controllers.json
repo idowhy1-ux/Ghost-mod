@@ -3,13 +3,37 @@
   "render_controllers": {
     "controller.render.ghost_shroud": {
       "geometry": "Geometry.default",
-      "materials": [ { "*": "Material.default" } ],
-      "textures": [ "Texture.default" ]
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.default"
+      ]
     },
     "controller.render.ghost_eyes": {
       "geometry": "Geometry.ghost_eyes",
-      "materials": [ { "*": "Material.ghost_eyes" } ],
-      "textures": [ "Texture.ghost_eyes" ],
+      "materials": [
+        {
+          "*": "Material.ghost_eyes"
+        }
+      ],
+      "textures": [
+        "Texture.ghost_eyes"
+      ],
+      "ignore_lighting": true
+    },
+    "controller.render.ghost_glow": {
+      "geometry": "Geometry.default",
+      "materials": [
+        {
+          "*": "Material.default"
+        }
+      ],
+      "textures": [
+        "Texture.default"
+      ],
       "ignore_lighting": true
     }
   }

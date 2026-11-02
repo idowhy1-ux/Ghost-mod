@@ -1,89 +1,105 @@
 // =====================================================================
-//  GHOST MOD V2: POSSESSION  -  Minecraft Bedrock add-on
+//  GHOST MOD V3: MIND DIVE  -  Minecraft Bedrock add-on
 //  (works on phone, tablet, PC and console)
 //
 //  When a player dies they come back as a see-through black & white
-//  ghost with bright white glowing eyes. Ghosts hunt Lost Souls and
-//  Haunted Blocks for Soul Essence, haunt and scare the living, and can
-//  climb inside the CORPSE of a dead mob to walk around in its body and
-//  use its powers. Collect enough Essence (or get a friend to offer a
-//  Golden Apple at your grave) to come back to life.
+//  ghost with bright white glowing eyes. Ghosts haunt the living, and
+//  they take over mobs:
+//    * a CORPSE can be possessed instantly - just tap it;
+//    * a LIVING mob must be conquered from the inside: dive into its
+//      brain (you are pulled into another dimension) and beat its mind
+//      trial - a Spirit Duel, Mind Parkour, a Thought Maze or a Memory
+//      Hunt. Win and you wake up inside its body.
+//  Revive with the Soul Heart once it recharges, or when a friend offers
+//  a Golden Apple at your grave.
 //
 //  Every power is an item you just TAP, so it works with touch controls.
 // =====================================================================
 
 import {
-  world, system, ItemStack, ItemLockMode, EquipmentSlot, GameMode, InputButton, ButtonState,
+  world, system, ItemStack, ItemLockMode, EquipmentSlot, GameMode, InputButton, ButtonState, BlockVolume,
 } from "@minecraft/server";
 
 // ----------------------------- settings ------------------------------
 const CFG = {
-  reviveCost: 10,               // essence needed to revive with the Soul Heart
-  freeReviveSeconds: 600,       // after this long a ghost may revive for free
-  maxSoulsPerDimension: 40,
-  soulLifetimeTicks: 20 * 180,  // lost souls fade after 3 minutes
-  soulSpawnRange: 96,           // a ghost must be this close for a dying mob to leave a soul / corpse
+  reviveSeconds: 120,           // the Soul Heart recharges after this long as a ghost
+  corpseSpawnRange: 96,         // a ghost must be this close for a dying mob to leave a corpse
   maxCorpsesPerDimension: 24,
   corpseLifetimeMs: 5 * 60 * 1000,
-  hauntedSpotsPerGhost: 3,
-  hauntedSpotLifetimeTicks: 20 * 150,
-  hauntedReward: 3,
-  playerKillReward: 3,          // essence for killing a living player while possessing a body
   hauntTnt: true,               // haunting TNT lights it
   possessedExplosionsBreakBlocks: true, // creeper detonate / ghast fireball
   cooldowns: {                  // in ticks (20 ticks = 1 second)
-    reap: 12, sense: 60, wail: 500, dash: 30, phase: 500, shove: 80, siphon: 60, haunt: 6, melee: 8,
+    reap: 12, sense: 60, wail: 500, dash: 30, phase: 500, shove: 80, siphon: 60, haunt: 6, melee: 8, dive: 40,
   },
   phaseTicks: 100,
 };
 
+// The mind realm: arenas built far out in the void of The End.
+const MIND = {
+  dim: "minecraft:the_end",
+  x: 40000, y: 200, z: 40000, spacing: 600, slots: 8,
+  loadTicks: 240,   // give up if the arena can't load in time
+  returnTicks: 100, // how long to wait for the real mob's chunk when returning
+  guardMs: 60000,   // a mob that threw you out can't be dived again for a while
+  reach: 26,        // arenas stay within this many blocks of their centre
+};
+
+const TRIALS = {
+  duel: { name: "Spirit Duel", time: 120, goal: (n) => `Defeat the Spirit of the ${n}!` },
+  parkour: { name: "Mind Parkour", time: 150, goal: () => "Leap across its thoughts to the glowing Brain Core!" },
+  maze: { name: "Thought Maze", time: 120, goal: () => "Find the Brain Core hidden in the maze!" },
+  memories: { name: "Memory Hunt", time: 75, goal: () => "Catch all 6 glowing memories!" },
+};
+
 const GHOST_TAG = "ghost";
-const LOST_SOUL = "ghost:lost_soul";
 const GRAVESTONE = "ghost:gravestone";
+const MEMORY = "ghost:memory";
 const SHROUD = "ghost:ghost_shroud";
 const VESSEL_PREFIX = "ghost:vessel_";
 const T = {
   reaper: "ghost:spirit_reaper",
   hand: "ghost:haunting_hand",
+  dive: "ghost:mind_dive",
   bell: "ghost:wailing_bell",
   wisp: "ghost:spectral_wisp",
   veil: "ghost:phase_veil",
   heart: "ghost:soul_heart",
   power: "ghost:body_power",
   leave: "ghost:body_leave",
+  escape: "ghost:escape_mind",
 };
-const TOOL_SLOTS = [[0, T.reaper], [1, T.hand], [2, T.bell], [3, T.wisp], [4, T.veil], [8, T.heart]];
+const TOOL_SLOTS = [[0, T.reaper], [1, T.hand], [2, T.dive], [3, T.bell], [4, T.wisp], [5, T.veil], [8, T.heart]];
 const DP = {
   isGhost: "ghost:is_ghost",
   pending: "ghost:pending",
-  essence: "ghost:essence",
   grave: "ghost:grave",
   since: "ghost:since",
   prevMode: "ghost:prev_mode",
   phasing: "ghost:phasing",
   vessel: "ghost:vessel",       // on a player: id of the body they possess
+  dive: "ghost:dive",           // on a player: the mind dive in progress (for recovery)
   possessor: "ghost:possessor", // on a body: id of the player inside
   owner: "ghost:owner",
-  value: "ghost:value",
   born: "ghost:born",
   mobName: "ghost:mob_name",
+  entrancedBy: "ghost:entranced_by", // on a living mob: the ghost inside its mind
+  origName: "ghost:orig_name",
+  freezeAt: "ghost:freeze_at",
+  guard: "ghost:guard_until",
 };
+const ENTRANCED_TAG = "ghost_entranced";
+const SPIRIT_TAG = "ghost_mind_spirit";
 const DIMENSIONS = ["minecraft:overworld", "minecraft:nether", "minecraft:the_end"];
-const BOSSES = new Set(["minecraft:wither", "minecraft:ender_dragon", "minecraft:warden", "minecraft:elder_guardian"]);
-const NO_SOUL = new Set([
-  "minecraft:armor_stand", "minecraft:item", "minecraft:xp_orb", "minecraft:arrow",
-  "minecraft:snowball", "minecraft:tnt", "minecraft:falling_block",
-]);
 const GHOST_EFFECTS = [
   "invisibility", "weakness", "resistance", "fire_resistance", "water_breathing",
   "night_vision", "saturation", "slow_falling", "levitation",
 ];
 const LOCK_SLOT = (ItemLockMode && (ItemLockMode.slot ?? ItemLockMode.Slot)) || "slot";
 const CHEST = (EquipmentSlot && (EquipmentSlot.Chest ?? EquipmentSlot.chest)) || "Chest";
-const NOT_TARGETS = { excludeFamilies: ["ghost_spirit", "gravestone", "ghost_corpse", "inanimate"], excludeTags: [GHOST_TAG], excludeTypes: ["minecraft:item", "minecraft:xp_orb", "minecraft:arrow"] };
+const NOT_TARGETS = { excludeFamilies: ["gravestone", "ghost_corpse", "ghost_memory", "inanimate"], excludeTags: [GHOST_TAG], excludeTypes: ["minecraft:item", "minecraft:xp_orb", "minecraft:arrow"] };
+const BRAIN = ["minecraft:pink_concrete", "minecraft:pink_terracotta", "minecraft:magenta_terracotta"];
 
 // ------------------------- possessable bodies --------------------------
-// Which vanilla mobs leave a corpse you can possess (mob id -> body key).
 const MOB_TO_BODY = {
   "minecraft:zombie": "zombie", "minecraft:husk": "husk", "minecraft:skeleton": "skeleton",
   "minecraft:stray": "stray", "minecraft:wither_skeleton": "wither_skeleton", "minecraft:creeper": "creeper",
@@ -95,49 +111,51 @@ const MOB_TO_BODY = {
   "minecraft:goat": "goat", "minecraft:polar_bear": "polar_bear", "minecraft:bee": "bee",
   "minecraft:bat": "bat", "minecraft:villager_v2": "villager", "minecraft:villager": "villager",
 };
+const BODY_TO_MOB = {};
+for (const [mob, key] of Object.entries(MOB_TO_BODY)) if (!BODY_TO_MOB[key]) BODY_TO_MOB[key] = mob;
 
 // melee: damage when you hit something while in the body. power: the tap ability.
 // fly: blocks per tick when flying. jump: jump strength. climb: walks up walls.
+// trial: what you face inside its mind. palette: colours of its mind.
 const BODIES = {
-  zombie: { name: "Zombie", melee: 4, power: "roar", powerName: "Undead Roar", cd: 300, desc: "Slows and weakens everyone nearby", sound: "mob.zombie.say" },
-  husk: { name: "Husk", melee: 4, onHit: [["hunger", 140, 1]], power: "sandstorm", powerName: "Sandstorm", cd: 300, desc: "Blinds and starves nearby players", sound: "mob.husk.ambient" },
-  skeleton: { name: "Skeleton", melee: 3, power: "volley", powerName: "Bone Volley", cd: 40, desc: "Fire three arrows", sound: "mob.skeleton.say" },
-  stray: { name: "Stray", melee: 3, power: "frost_volley", powerName: "Frost Volley", cd: 40, desc: "Fire three freezing arrows", sound: "mob.stray.ambient" },
-  wither_skeleton: { name: "Wither Skeleton", melee: 8, onHit: [["wither", 120, 0]], power: "wither_slash", powerName: "Wither Slash", cd: 160, desc: "A sweeping slash that withers everything in front", sound: "mob.skeleton.say" },
-  creeper: { name: "Creeper", melee: 2, power: "detonate", powerName: "Detonate", cd: 20, desc: "Hiss... then EXPLODE (destroys this body)", sound: "mob.creeper.say" },
-  spider: { name: "Spider", melee: 3, climb: true, jump: 0.5, power: "web", powerName: "Web Shot", cd: 160, desc: "Trap a target in cobweb. You can climb walls!", sound: "mob.spider.say" },
-  cave_spider: { name: "Cave Spider", melee: 2, climb: true, onHit: [["poison", 140, 0]], power: "venom_pounce", powerName: "Venom Pounce", cd: 100, desc: "Leap and poison. You can climb walls!", sound: "mob.spider.say" },
-  enderman: { name: "Enderman", melee: 7, power: "blink", powerName: "Ender Blink", cd: 60, desc: "Teleport where you are looking", sound: "mob.endermen.portal" },
-  blaze: { name: "Blaze", melee: 5, fly: 0.3, onHitFire: 4, power: "fireballs", powerName: "Fireball Barrage", cd: 50, desc: "Shoot three fireballs. You can fly!", sound: "mob.blaze.shoot" },
-  ghast: { name: "Ghast", melee: 3, fly: 0.22, power: "ghast_ball", powerName: "Explosive Fireball", cd: 80, desc: "Launch an exploding fireball. You can fly!", sound: "mob.ghast.fireball" },
-  witch: { name: "Witch", melee: 2, power: "hex", powerName: "Hex", cd: 240, desc: "Curse everyone in front with poison and slowness", sound: "mob.witch.celebrate" },
-  phantom: { name: "Phantom", melee: 4, fly: 0.5, power: "swoop", powerName: "Swoop", cd: 80, desc: "Dive forward and bite. You can fly!", sound: "mob.phantom.swoop" },
-  evoker: { name: "Evoker", melee: 2, power: "fangs", powerName: "Fang Line", cd: 160, desc: "Summon a line of biting fangs", sound: "mob.evocation_illager.cast_spell" },
-  iron_golem: { name: "Iron Golem", melee: 12, launch: 0.6, power: "slam", powerName: "Ground Slam", cd: 160, desc: "Smash the ground and launch everyone nearby", sound: "mob.irongolem.throw" },
-  wolf: { name: "Wolf", melee: 5, jump: 0.5, power: "pounce", powerName: "Pounce", cd: 60, desc: "Leap at your prey", sound: "mob.wolf.growl" },
-  fox: { name: "Fox", melee: 3, jump: 0.55, power: "pounce", powerName: "Pounce", cd: 50, desc: "Leap at your prey", sound: "mob.fox.screech" },
-  pig: { name: "Pig", melee: 2, power: "sniff", powerName: "Truffle Sniff", cd: 120, desc: "Sniff out players, souls and haunted blocks", sound: "mob.pig.say" },
-  cow: { name: "Cow", melee: 2, power: "stampede", powerName: "Stampede", cd: 140, desc: "Charge forward, trampling everything", sound: "mob.cow.say" },
-  sheep: { name: "Sheep", melee: 2, power: "wool_cloud", powerName: "Wool Cloud", cd: 100, desc: "Puff into the sky and float down", sound: "mob.sheep.say" },
-  chicken: { name: "Chicken", melee: 1, glide: true, power: "eggs", powerName: "Egg Barrage", cd: 40, desc: "Throw three eggs. You glide when falling!", sound: "mob.chicken.plop" },
-  rabbit: { name: "Rabbit", melee: 1, jump: 0.65, power: "super_hop", powerName: "Super Hop", cd: 30, desc: "An enormous leap", sound: "mob.rabbit.hop" },
-  goat: { name: "Goat", melee: 3, jump: 0.6, power: "ram", powerName: "Ram", cd: 100, desc: "Charge and send everything flying", sound: "mob.goat.ambient" },
-  polar_bear: { name: "Polar Bear", melee: 7, power: "maul", powerName: "Maul", cd: 120, desc: "A terrifying roar and swipe", sound: "mob.polarbear.warning" },
-  bee: { name: "Bee", melee: 2, fly: 0.32, onHit: [["poison", 160, 0]], power: "sting", powerName: "Sting", cd: 80, desc: "Dart forward with a poison sting. You can fly!", sound: "mob.bee.sting" },
-  bat: { name: "Bat", melee: 1, fly: 0.36, power: "echo", powerName: "Echolocation", cd: 120, desc: "Reveal everything around you. You can fly!", sound: "mob.bat.idle" },
-  villager: { name: "Villager", melee: 2, power: "ambush", powerName: "Ambush", cd: 300, desc: "Look harmless... your next hit deals triple damage", sound: "mob.villager.haggle" },
+  zombie: { name: "Zombie", melee: 4, power: "roar", powerName: "Undead Roar", cd: 300, desc: "Slows and weakens everyone nearby", sound: "mob.zombie.say", trial: "duel" },
+  husk: { name: "Husk", melee: 4, onHit: [["hunger", 140, 1]], power: "sandstorm", powerName: "Sandstorm", cd: 300, desc: "Blinds and starves nearby players", sound: "mob.husk.ambient", trial: "duel", palette: ["minecraft:yellow_concrete", "minecraft:orange_terracotta", "minecraft:brown_terracotta"] },
+  skeleton: { name: "Skeleton", melee: 3, power: "volley", powerName: "Bone Volley", cd: 40, desc: "Fire three arrows", sound: "mob.skeleton.say", trial: "duel", palette: ["minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:gray_concrete"] },
+  stray: { name: "Stray", melee: 3, power: "frost_volley", powerName: "Frost Volley", cd: 40, desc: "Fire three freezing arrows", sound: "mob.stray.ambient", trial: "duel", palette: ["minecraft:light_blue_concrete", "minecraft:white_concrete", "minecraft:cyan_terracotta"] },
+  wither_skeleton: { name: "Wither Skeleton", melee: 8, onHit: [["wither", 120, 0]], power: "wither_slash", powerName: "Wither Slash", cd: 160, desc: "A sweeping slash that withers everything in front", sound: "mob.skeleton.say", trial: "duel", palette: ["minecraft:black_concrete", "minecraft:gray_concrete", "minecraft:black_concrete"] },
+  creeper: { name: "Creeper", melee: 2, power: "detonate", powerName: "Detonate", cd: 20, desc: "Hiss... then EXPLODE (destroys this body)", sound: "mob.creeper.say", trial: "parkour", palette: ["minecraft:lime_concrete", "minecraft:green_concrete", "minecraft:lime_terracotta"] },
+  spider: { name: "Spider", melee: 3, climb: true, jump: 0.5, power: "web", powerName: "Web Shot", cd: 160, desc: "Trap a target in cobweb. You can climb walls!", sound: "mob.spider.say", trial: "duel" },
+  cave_spider: { name: "Cave Spider", melee: 2, climb: true, onHit: [["poison", 140, 0]], power: "venom_pounce", powerName: "Venom Pounce", cd: 100, desc: "Leap and poison. You can climb walls!", sound: "mob.spider.say", trial: "duel" },
+  enderman: { name: "Enderman", melee: 7, power: "blink", powerName: "Ender Blink", cd: 60, desc: "Teleport where you are looking", sound: "mob.endermen.portal", trial: "maze", palette: ["minecraft:purple_concrete", "minecraft:black_concrete", "minecraft:purpur_block"] },
+  blaze: { name: "Blaze", melee: 5, fly: 0.3, onHitFire: 4, power: "fireballs", powerName: "Fireball Barrage", cd: 50, desc: "Shoot three fireballs. You can fly!", sound: "mob.blaze.shoot", trial: "parkour", palette: ["minecraft:orange_concrete", "minecraft:yellow_concrete", "minecraft:orange_terracotta"] },
+  ghast: { name: "Ghast", melee: 3, fly: 0.22, power: "ghast_ball", powerName: "Explosive Fireball", cd: 80, desc: "Launch an exploding fireball. You can fly!", sound: "mob.ghast.fireball", trial: "parkour", palette: ["minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:white_concrete"] },
+  witch: { name: "Witch", melee: 2, power: "hex", powerName: "Hex", cd: 240, desc: "Curse everyone in front with poison and slowness", sound: "mob.witch.celebrate", trial: "duel", palette: ["minecraft:purple_concrete", "minecraft:green_concrete", "minecraft:magenta_terracotta"] },
+  phantom: { name: "Phantom", melee: 4, fly: 0.5, power: "swoop", powerName: "Swoop", cd: 80, desc: "Dive forward and bite. You can fly!", sound: "mob.phantom.swoop", trial: "parkour", palette: ["minecraft:light_blue_concrete", "minecraft:cyan_terracotta", "minecraft:gray_concrete"] },
+  evoker: { name: "Evoker", melee: 2, power: "fangs", powerName: "Fang Line", cd: 160, desc: "Summon a line of biting fangs", sound: "mob.evocation_illager.cast_spell", trial: "duel" },
+  iron_golem: { name: "Iron Golem", melee: 12, launch: 0.6, power: "slam", powerName: "Ground Slam", cd: 160, desc: "Smash the ground and launch everyone nearby", sound: "mob.irongolem.throw", trial: "duel", palette: ["minecraft:light_gray_concrete", "minecraft:white_concrete", "minecraft:gray_concrete"] },
+  wolf: { name: "Wolf", melee: 5, jump: 0.5, power: "pounce", powerName: "Pounce", cd: 60, desc: "Leap at your prey", sound: "mob.wolf.growl", trial: "duel" },
+  fox: { name: "Fox", melee: 3, jump: 0.55, power: "pounce", powerName: "Pounce", cd: 50, desc: "Leap at your prey", sound: "mob.fox.screech", trial: "maze", palette: ["minecraft:orange_concrete", "minecraft:white_concrete", "minecraft:orange_terracotta"] },
+  pig: { name: "Pig", melee: 2, power: "sniff", powerName: "Truffle Sniff", cd: 120, desc: "Sniff out players, corpses and minds nearby", sound: "mob.pig.say", trial: "maze" },
+  cow: { name: "Cow", melee: 2, power: "stampede", powerName: "Stampede", cd: 140, desc: "Charge forward, trampling everything", sound: "mob.cow.say", trial: "memories" },
+  sheep: { name: "Sheep", melee: 2, power: "wool_cloud", powerName: "Wool Cloud", cd: 100, desc: "Puff into the sky and float down", sound: "mob.sheep.say", trial: "memories", palette: ["minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:pink_concrete"] },
+  chicken: { name: "Chicken", melee: 1, glide: true, power: "eggs", powerName: "Egg Barrage", cd: 40, desc: "Throw three eggs. You glide when falling!", sound: "mob.chicken.plop", trial: "memories", palette: ["minecraft:white_concrete", "minecraft:yellow_concrete", "minecraft:white_concrete"] },
+  rabbit: { name: "Rabbit", melee: 1, jump: 0.65, power: "super_hop", powerName: "Super Hop", cd: 30, desc: "An enormous leap", sound: "mob.rabbit.hop", trial: "parkour" },
+  goat: { name: "Goat", melee: 3, jump: 0.6, power: "ram", powerName: "Ram", cd: 100, desc: "Charge and send everything flying", sound: "mob.goat.ambient", trial: "parkour", palette: ["minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:gray_concrete"] },
+  polar_bear: { name: "Polar Bear", melee: 7, power: "maul", powerName: "Maul", cd: 120, desc: "A terrifying roar and swipe", sound: "mob.polarbear.warning", trial: "duel", palette: ["minecraft:white_concrete", "minecraft:light_blue_concrete", "minecraft:white_concrete"] },
+  bee: { name: "Bee", melee: 2, fly: 0.32, onHit: [["poison", 160, 0]], power: "sting", powerName: "Sting", cd: 80, desc: "Dart forward with a poison sting. You can fly!", sound: "mob.bee.sting", trial: "parkour", palette: ["minecraft:honeycomb_block", "minecraft:yellow_concrete", "minecraft:black_concrete"] },
+  bat: { name: "Bat", melee: 1, fly: 0.36, power: "echo", powerName: "Echolocation", cd: 120, desc: "Reveal everything around you. You can fly!", sound: "mob.bat.idle", trial: "parkour", palette: ["minecraft:black_concrete", "minecraft:gray_concrete", "minecraft:brown_terracotta"] },
+  villager: { name: "Villager", melee: 2, power: "ambush", powerName: "Ambush", cd: 300, desc: "Look harmless... your next hit deals triple damage", sound: "mob.villager.haggle", trial: "maze", palette: ["minecraft:brown_terracotta", "minecraft:white_concrete", "minecraft:pink_terracotta"] },
 };
 
 // ----------------------------- runtime state -------------------------
 const cooldowns = new Map();     // playerId -> { ability: readyTick }
-const hauntSpots = new Map();    // playerId -> [{dim,x,y,z,expires}]
 const phasing = new Map();       // playerId -> endTick
 const flashes = new Map();       // playerId -> { text, until }
 const chillCooldown = new Map(); // living playerId -> tick
-const soulValues = new Map();    // soul entity id -> essence value
 const lastHaunt = new Map();
 const possessions = new Map();   // playerId -> possession state
 const ownProjectiles = new Map(); // projectile id -> { effect, until }
+const dives = new Map();         // playerId -> mind dive state
 
 // ----------------------------- helpers -------------------------------
 const now = () => system.currentTick;
@@ -147,6 +165,12 @@ const isGhost = (p) => { try { return p.getDynamicProperty(DP.isGhost) === true;
 const ghosts = () => world.getAllPlayers().filter(isGhost);
 const isVessel = (e) => !!e && typeof e.typeId === "string" && e.typeId.startsWith(VESSEL_PREFIX);
 const isCorpse = (e) => { try { return isVessel(e) && e.getProperty("ghost:corpse") === true; } catch { return false; } };
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
+const playerById = (id) => world.getAllPlayers().find((o) => o.id === id);
+
+function getEntity(id) {
+  try { const e = world.getEntity(String(id)); return isValid(e) ? e : undefined; } catch { return undefined; }
+}
 
 function run(entity, command) {
   try {
@@ -165,10 +189,6 @@ function setMode(p, mode) {
   run(p, `gamemode ${mode} @s`);
 }
 
-function isNight() {
-  try { const t = world.getTimeOfDay(); return t >= 13000 && t <= 23000; } catch { return false; }
-}
-
 function effect(entity, id, duration, amplifier = 0) {
   try { entity.addEffect(id, duration, { amplifier, showParticles: false }); } catch { /* ignore */ }
 }
@@ -185,6 +205,14 @@ function burst(dim, id, loc, n = 6, spread = 1) {
 
 function sound(dim, id, loc, pitch = 1, volume = 1) {
   try { dim.playSound(id, loc, { pitch, volume }); } catch { /* ignore */ }
+}
+
+function fade(p, fadeIn, hold, fadeOut, color = { red: 0, green: 0, blue: 0 }) {
+  try { p.camera.fade({ fadeTime: { fadeInTime: fadeIn, holdTime: hold, fadeOutTime: fadeOut }, fadeColor: color }); } catch { /* ignore */ }
+}
+
+function title(p, text, subtitle, stay = 60) {
+  try { p.onScreenDisplay.setTitle(text, { subtitle, fadeInDuration: 8, stayDuration: stay, fadeOutDuration: 15 }); } catch { /* ignore */ }
 }
 
 function ready(p, ability, label = ability) {
@@ -210,16 +238,9 @@ function flash(p, text, ticks = 50) {
   try { p.onScreenDisplay.setActionBar(text); } catch { /* ignore */ }
 }
 
-function getEssence(p) { return Number(p.getDynamicProperty(DP.essence) ?? 0); }
-function addEssence(p, n) {
-  const e = Math.max(0, getEssence(p) + n);
-  p.setDynamicProperty(DP.essence, e);
-  return e;
-}
-
-function freeReviveRemaining(p) {
+function reviveRemaining(p) {
   const since = Number(p.getDynamicProperty(DP.since) ?? Date.now());
-  return Math.max(0, CFG.freeReviveSeconds - Math.floor((Date.now() - since) / 1000));
+  return Math.max(0, CFG.reviveSeconds - Math.floor((Date.now() - since) / 1000));
 }
 
 function getGrave(p) {
@@ -317,8 +338,15 @@ function removeItems(p, test) {
   }
 }
 
+function removeShroud(p) {
+  try {
+    const eq = p.getComponent("minecraft:equippable");
+    if (eq.getEquipment(CHEST)?.typeId === SHROUD) eq.setEquipment(CHEST, undefined);
+  } catch { /* ignore */ }
+}
+
 function giveGhostTools(p) {
-  removeItems(p, (id) => id === T.power || id === T.leave);
+  removeItems(p, (id) => id === T.power || id === T.leave || id === T.escape);
   for (const [slot, id] of TOOL_SLOTS) putLocked(p, slot, lockedItem(id));
   try {
     const eq = p.getComponent("minecraft:equippable");
@@ -333,28 +361,30 @@ function giveGhostTools(p) {
   } catch { /* ignore */ }
 }
 
-function removeShroud(p) {
-  try {
-    const eq = p.getComponent("minecraft:equippable");
-    if (eq.getEquipment(CHEST)?.typeId === SHROUD) eq.setEquipment(CHEST, undefined);
-  } catch { /* ignore */ }
-}
-
 function removeGhostTools(p) {
   removeItems(p, (id) => id.startsWith("ghost:"));
   removeShroud(p);
 }
 
 function givePossessionTools(p, def) {
-  removeItems(p, (id) => id.startsWith("ghost:"));
-  removeShroud(p);
+  removeGhostTools(p);
   putLocked(p, 0, lockedItem(T.power, `§b${def.powerName} §7(${def.name})`, [`§7${def.desc}`, "§8Tap to use"]));
   putLocked(p, 1, lockedItem(T.leave, "§fLeave Body", ["§7Slip out of this body", "§8(or use the dismount / sneak button)"]));
+}
+
+function giveMindTools(p, trial) {
+  removeGhostTools(p);
+  if (trial === "duel") putLocked(p, 0, lockedItem(T.reaper, "§fSpirit Reaper", ["§7Strike the Spirit to break its mind"]));
+  putLocked(p, 8, lockedItem(T.escape, "§cEscape Mind", ["§7Give up and flee back to your world"]));
 }
 
 // ------------------------- becoming a ghost --------------------------
 function applyGhostEffects(p) {
   effect(p, "invisibility", 600);
+  applyMindEffects(p);
+}
+
+function applyMindEffects(p) {
   effect(p, "weakness", 600, 255);
   effect(p, "resistance", 600, 255);
   effect(p, "fire_resistance", 600);
@@ -367,7 +397,6 @@ function becomeGhost(p, fresh) {
   if (fresh) {
     p.setDynamicProperty(DP.isGhost, true);
     p.setDynamicProperty(DP.since, Date.now());
-    if (p.getDynamicProperty(DP.essence) === undefined) p.setDynamicProperty(DP.essence, 0);
     const grave = getGrave(p);
     if (grave) {
       try {
@@ -380,15 +409,11 @@ function becomeGhost(p, fresh) {
   phasing.delete(p.id);
   setMode(p, "adventure");
   applyGhostEffects(p);
+  if (recoverDive(p)) return;
   if (!resumePossession(p)) giveGhostTools(p);
 
   if (fresh) {
-    try {
-      p.onScreenDisplay.setTitle("§fYou are a §7Ghost", {
-        subtitle: "§8Hunt souls. Possess the dead. Return.",
-        fadeInDuration: 10, stayDuration: 60, fadeOutDuration: 20,
-      });
-    } catch { /* ignore */ }
+    title(p, "§fYou are a §7Ghost", "§8Possess the dead. Invade the minds of the living.");
     try { p.playSound("ambient.cave", { pitch: 0.7 }); } catch { /* ignore */ }
     sendHelp(p);
   }
@@ -396,50 +421,45 @@ function becomeGhost(p, fresh) {
 
 function sendHelp(p) {
   const lines = [
-    "§8========= §fGHOST MOD V2: POSSESSION §8=========",
+    "§8========== §fGHOST MOD V3: MIND DIVE §8==========",
     "§7You died and became a ghost. Tap your spectral tools:",
-    "§fSpirit Reaper §7- hit Lost Souls. Tap air = soul sweep. Hit the living = drain their life.",
-    "§fHaunting Hand §7- tap blocks to haunt them. Tap air = Spirit Sense. Hit a mob/player = invisible shove.",
-    "§fWailing Bell §7- a terrifying wail. §fSpectral Wisp §7- dash where you look. §fPhase Veil §7- drift through walls.",
-    "§5POSSESSION: §7Mobs that die near you leave a §fcorpse§7. Tap it (or press Possess) to climb inside!",
-    "§7  Walk around in its body, tap §bits power§7, and hit things with its strength. Its eyes glow white.",
-    "§7  Leave with §fLeave Body §7or the dismount/sneak button. If the body dies, you pop back out.",
-    `§bSoul Heart §7- revive with §b${CFG.reviveCost} Essence§7, or free after ${CFG.freeReviveSeconds / 60} minutes.`,
-    "§7Earn Essence from §fLost Souls§7, §dHaunted Blocks §7(follow the soul flames) and scaring players. Souls are worth §5double at night§7.",
-    "§7Hold JUMP to float up, sneak to sink. Friends can revive you with a §6Golden Apple §7at your grave.",
+    "§fSpirit Reaper §7- drain the life of living players.  §fHaunting Hand §7- haunt blocks, tap air = Spirit Sense.",
+    "§fWailing Bell §7- a terrifying wail.  §fSpectral Wisp §7- dash.  §fPhase Veil §7- drift through walls.",
+    "§5CORPSES: §7mobs that die near you leave a corpse. Tap it to possess it instantly!",
+    "§dMIND DIVE: §7hit a LIVING mob with the §dMind Dive §7to enter its brain in another dimension.",
+    "§7  Beat its mind trial - §fSpirit Duel§7, §fMind Parkour§7, §fThought Maze §7or §fMemory Hunt§7 - to take its body.",
+    "§7  Inside a body: tap §bits power§7, hit things with its strength. Leave with §fLeave Body §7or dismount.",
+    `§bSoul Heart §7- revive once it recharges (${Math.round(CFG.reviveSeconds / 60)} min). Friends can revive you with a §6Golden Apple §7at your grave.`,
+    "§7Hold JUMP to float up, sneak to sink.",
   ];
   for (const l of lines) p.sendMessage(l);
 }
 
 // --------------------------- reviving -------------------------------
-function tryRevive(p, via) {
+function tryRevive(p) {
   if (!isGhost(p)) return;
   if (phasing.has(p.id)) { flash(p, "§cYou cannot revive while phasing."); return; }
-  if (via === "self") {
-    const remaining = freeReviveRemaining(p);
-    const e = getEssence(p);
-    if (remaining > 0) {
-      if (e < CFG.reviveCost) {
-        flash(p, `§cNeed §b${CFG.reviveCost - e} §cmore Essence, or wait §f${fmtTime(remaining)}`, 80);
-        try { p.playSound("note.bass", { pitch: 0.5 }); } catch { /* ignore */ }
-        return;
-      }
-      addEssence(p, -CFG.reviveCost);
-    }
+  const remaining = reviveRemaining(p);
+  if (remaining > 0) {
+    flash(p, `§7Your Soul Heart is still recharging... §f${fmtTime(remaining)}`, 60);
+    try { p.playSound("note.bass", { pitch: 0.5 }); } catch { /* ignore */ }
+    return;
   }
-  revive(p, via === "friend");
+  revive(p, false);
 }
 
 function revive(p, atGrave) {
+  const back = dives.get(p.id)?.ret;
+  if (dives.has(p.id)) abandonDive(p);
   if (possessions.has(p.id)) endPossession(p, "leave", true);
   const grave = getGrave(p);
   p.setDynamicProperty(DP.isGhost, false);
   p.setDynamicProperty(DP.pending, false);
   p.setDynamicProperty(DP.phasing, false);
   p.setDynamicProperty(DP.vessel, undefined);
+  p.setDynamicProperty(DP.dive, undefined);
   p.removeTag(GHOST_TAG);
   phasing.delete(p.id);
-  hauntSpots.delete(p.id);
   removeGhostTools(p);
   for (const e of GHOST_EFFECTS) { try { p.removeEffect(e); } catch { /* ignore */ } }
 
@@ -449,18 +469,18 @@ function revive(p, atGrave) {
 
   removeGrave(p.id, grave);
   p.setDynamicProperty(DP.grave, undefined);
-  if (atGrave && grave) {
+  if (grave && (atGrave || p.dimension.id === MIND.dim)) {
     try {
       p.teleport({ x: grave.x + 0.5, y: grave.y, z: grave.z + 0.5 }, { dimension: world.getDimension(grave.dim) });
     } catch { /* ignore */ }
+  } else if (p.dimension.id === MIND.dim && back) {
+    try { p.teleport({ x: back.x, y: back.y + 0.5, z: back.z }, { dimension: world.getDimension(back.dim) }); } catch { /* ignore */ }
   }
   system.runTimeout(() => { if (isValid(p)) unstuck(p); }, 2);
 
   effect(p, "slow_falling", 200);
   effect(p, "regeneration", 100, 1);
-  try {
-    p.onScreenDisplay.setTitle("§fYou live again!", { subtitle: "§7The living world welcomes you back", fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15 });
-  } catch { /* ignore */ }
+  title(p, "§fYou live again!", "§7The living world welcomes you back", 50);
   const dim = p.dimension;
   sound(dim, "random.totem", p.location);
   burst(dim, "minecraft:totem_particle", { x: p.location.x, y: p.location.y + 0.5, z: p.location.z }, 8);
@@ -505,6 +525,7 @@ function unstuck(p) {
 
 // ------------------------- death & respawn --------------------------
 function onPlayerDeath(p) {
+  if (dives.has(p.id)) abandonDive(p);
   if (possessions.has(p.id)) endPossession(p, "leave", true);
   if (isGhost(p)) return; // a ghost "dying" just reforms
   let mode = "survival";
@@ -555,168 +576,63 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
   }, 5);
 });
 
-// ------------------------- lost souls & corpses ---------------------------
+// ------------------------------ corpses ------------------------------
 function ghostNear(dim, loc) {
-  try { return dim.getPlayers({ location: loc, maxDistance: CFG.soulSpawnRange, tags: [GHOST_TAG] }).length > 0; } catch { return false; }
+  try { return dim.getPlayers({ location: loc, maxDistance: CFG.corpseSpawnRange, tags: [GHOST_TAG] }).length > 0; } catch { return false; }
 }
 
-function onMobDeath(dead, damageSource) {
+function spawnCorpse(dim, loc, rot, key, name) {
+  try {
+    if (dim.getEntities({ families: ["ghost_corpse"] }).length >= CFG.maxCorpsesPerDimension) return undefined;
+    const c = dim.spawnEntity(VESSEL_PREFIX + key, loc);
+    try { c.setRotation({ x: 0, y: rot }); } catch { /* ignore */ }
+    c.setDynamicProperty(DP.born, Date.now());
+    c.setDynamicProperty(DP.mobName, name);
+    c.nameTag = `§7Corpse of §f${name}`;
+    return c;
+  } catch { return undefined; }
+}
+
+function diverOfMob(mobId) {
+  for (const [pid, d] of dives) if (d.mobId === mobId && d.phase !== "returning") return pid;
+  return undefined;
+}
+
+function onMobDeath(dead) {
   const typeId = dead.typeId;
-  if (typeId.startsWith("ghost:") || NO_SOUL.has(typeId)) return;
-  let dim, loc, rot = 0, name = prettyName(typeId), value = 1;
+  if (typeId.startsWith("ghost:")) return;
+  const key = MOB_TO_BODY[typeId];
+  if (!key) return;
+  let dim, loc, rot = 0, name = BODIES[key].name;
   try {
     dim = dead.dimension;
     loc = { ...dead.location };
     rot = dead.getRotation().y;
-    if (dead.nameTag) name = dead.nameTag;
-    if (BOSSES.has(typeId)) value = 10;
-    else if (dead.matches({ families: ["monster"] })) value = 2;
+    const orig = dead.getDynamicProperty(DP.origName);
+    if (typeof orig === "string" && orig) name = orig;
+    else if (dead.nameTag && !dead.hasTag(ENTRANCED_TAG)) name = dead.nameTag;
   } catch { if (!dim || !loc) return; }
-  if (!ghostNear(dim, loc)) return;
-
-  // the mob's soul rises...
-  system.runTimeout(() => {
-    try {
-      if (dim.getEntities({ type: LOST_SOUL }).length >= CFG.maxSoulsPerDimension) return;
-      const s = dim.spawnEntity(LOST_SOUL, { x: loc.x, y: loc.y + 0.8, z: loc.z });
-      s.nameTag = value >= 10 ? `§5Soul of ${name}` : value >= 2 ? `§8Soul of ${name}` : `§7Soul of ${name}`;
-      s.setDynamicProperty(DP.value, value);
-      s.setDynamicProperty(DP.born, now());
-      soulValues.set(s.id, value);
-      sound(dim, "mob.vex.ambient", loc, 0.6);
-      for (let i = 0; i < 4; i++) particle(dim, "minecraft:soul_particle", { x: loc.x, y: loc.y + 0.5 + i * 0.3, z: loc.z });
-    } catch { /* ignore */ }
-  }, 20);
-
-  // ...and its body stays behind for a ghost to possess
-  const key = MOB_TO_BODY[typeId];
-  if (!key) return;
-  system.runTimeout(() => {
-    try {
-      if (dim.getEntities({ families: ["ghost_corpse"] }).length >= CFG.maxCorpsesPerDimension) return;
-      const c = dim.spawnEntity(VESSEL_PREFIX + key, loc);
-      try { c.setRotation({ x: 0, y: rot }); } catch { /* ignore */ }
-      c.setDynamicProperty(DP.born, Date.now());
-      c.setDynamicProperty(DP.mobName, name);
-      c.nameTag = `§7Corpse of §f${name}`;
-    } catch { /* ignore */ }
-  }, 12);
-}
-
-function onSoulDeath(soul, damageSource) {
-  let value = soulValues.get(soul.id) ?? 1;
-  try { value = Number(soul.getDynamicProperty(DP.value) ?? value); } catch { /* ignore */ }
-  soulValues.delete(soul.id);
-  let killer = damageSource?.damagingEntity;
-  if (isVessel(killer)) killer = possessorOf(killer);
-  try {
-    burst(soul.dimension, "minecraft:soul_particle", { x: soul.location.x, y: soul.location.y + 0.3, z: soul.location.z }, 6);
-    sound(soul.dimension, "mob.vex.death", soul.location, 0.8);
-  } catch { /* ignore */ }
-  if (isPlayer(killer) && isGhost(killer)) {
-    const night = isNight();
-    const gain = night ? value * 2 : value;
-    const e = addEssence(killer, gain);
-    flash(killer, `§fSoul reaped! §b+${gain} Essence${night ? " §5(Witching Hour x2)" : ""} §7(${e}/${CFG.reviveCost})`);
-    try { killer.playSound("random.orb", { pitch: 1.4 }); } catch { /* ignore */ }
+  const diver = diverOfMob(dead.id);
+  if (!diver && !ghostNear(dim, loc)) return;
+  system.runTimeout(() => spawnCorpse(dim, loc, rot, key, name), 12);
+  if (diver) {
+    const p = playerById(diver);
+    const d = dives.get(diver);
+    if (p && d) {
+      d.ret = { dim: dim.id, x: loc.x, y: loc.y + 0.5, z: loc.z };
+      endDive(p, "body_died");
+    }
   }
 }
 
 world.afterEvents.entityDie.subscribe((ev) => {
   const d = ev.deadEntity;
   if (!d) return;
-  if (d.typeId === "minecraft:player") {
-    onPlayerDeath(d);
-    const killer = ev.damageSource?.damagingEntity;
-    if (isVessel(killer)) {
-      const p = possessorOf(killer);
-      if (p && p.id !== d.id) {
-        const e = addEssence(p, CFG.playerKillReward);
-        flash(p, `§cYou claimed a living soul! §b+${CFG.playerKillReward} Essence §7(${e})`, 70);
-      }
-    }
-  } else if (d.typeId === LOST_SOUL) onSoulDeath(d, ev.damageSource);
+  if (d.typeId === "minecraft:player") onPlayerDeath(d);
   else if (isVessel(d)) onBodyDeath(d);
-  else onMobDeath(d, ev.damageSource);
+  else if (d.hasTag?.(SPIRIT_TAG) || [...dives.values()].some((x) => x.spiritId === d.id)) onSpiritDeath(d);
+  else onMobDeath(d);
 });
-
-// --------------------------- haunted blocks ---------------------------
-function findHauntSpot(p) {
-  const dim = p.dimension;
-  const base = p.location;
-  for (let attempt = 0; attempt < 6; attempt++) {
-    const ang = Math.random() * Math.PI * 2;
-    const r = 8 + Math.random() * 16;
-    const x = Math.floor(base.x + Math.cos(ang) * r);
-    const z = Math.floor(base.z + Math.sin(ang) * r);
-    for (let y = Math.floor(base.y) + 6; y >= Math.floor(base.y) - 12; y--) {
-      let b;
-      try { b = dim.getBlock({ x, y, z }); } catch { b = undefined; }
-      if (!b) break;
-      if (b.isAir || b.isLiquid) continue;
-      let above;
-      try { above = dim.getBlock({ x, y: y + 1, z }); } catch { above = undefined; }
-      if (above && above.isAir) return { dim: dim.id, x, y, z, expires: now() + CFG.hauntedSpotLifetimeTicks };
-      break;
-    }
-  }
-  return undefined;
-}
-
-function maintainHauntSpots(p) {
-  const list = (hauntSpots.get(p.id) ?? []).filter((s) => s.expires > now() && s.dim === p.dimension.id && dist(s, p.location) < 64);
-  if (list.length < CFG.hauntedSpotsPerGhost && Math.random() < 0.35) {
-    const s = findHauntSpot(p);
-    if (s) list.push(s);
-  }
-  hauntSpots.set(p.id, list);
-  for (const s of list) {
-    if (dist(s, p.location) > 20) continue;
-    const c = { x: s.x + 0.5, y: s.y + 1.1, z: s.z + 0.5 };
-    particle(p.dimension, "minecraft:soul_particle", c);
-    particle(p.dimension, "minecraft:blue_flame_particle", c);
-  }
-}
-
-function nearestSpot(p) {
-  let best, bd = Infinity;
-  for (const s of hauntSpots.get(p.id) ?? []) {
-    const d = dist({ x: s.x + 0.5, y: s.y + 0.5, z: s.z + 0.5 }, p.location);
-    if (d < bd) { bd = d; best = s; }
-  }
-  return best ? { spot: best, d: Math.round(bd) } : undefined;
-}
-
-function spawnSoul(dim, loc, name, value) {
-  try {
-    const soul = dim.spawnEntity(LOST_SOUL, loc);
-    soul.nameTag = name;
-    soul.setDynamicProperty(DP.value, value);
-    soul.setDynamicProperty(DP.born, now());
-    soulValues.set(soul.id, value);
-  } catch { /* ignore */ }
-}
-
-function claimHauntSpot(p, loc) {
-  const list = hauntSpots.get(p.id) ?? [];
-  const idx = list.findIndex((s) => s.dim === p.dimension.id && Math.abs(s.x - loc.x) <= 1 && Math.abs(s.y - loc.y) <= 1 && Math.abs(s.z - loc.z) <= 1);
-  if (idx < 0) return false;
-  const [s] = list.splice(idx, 1);
-  const dim = p.dimension;
-  const c = { x: s.x + 0.5, y: s.y + 1, z: s.z + 0.5 };
-  burst(dim, "minecraft:soul_particle", c, 8);
-  if (Math.random() < 0.2) {
-    const e = addEssence(p, 1);
-    flash(p, `§5A cursed block! Souls burst free! §b+1 Essence §7(${e})`, 70);
-    sound(dim, "mob.wither.ambient", c, 1.4, 0.6);
-    for (let i = 0; i < 2; i++) spawnSoul(dim, { x: c.x, y: c.y + 0.5, z: c.z }, "§8Cursed Soul", 2);
-  } else {
-    const e = addEssence(p, CFG.hauntedReward);
-    flash(p, `§dHaunted block absorbed! §b+${CFG.hauntedReward} Essence §7(${e}/${CFG.reviveCost})`, 70);
-    sound(dim, "random.orb", c, 0.7);
-  }
-  return true;
-}
 
 // ------------------------ haunting blocks ----------------------------
 function toggleState(block, state) {
@@ -728,7 +644,6 @@ function toggleState(block, state) {
 }
 
 function hauntBlock(p, block) {
-  if (claimHauntSpot(p, block.location)) return;
   const dim = block.dimension;
   const loc = block.location;
   const c = { x: loc.x + 0.5, y: loc.y + 0.5, z: loc.z + 0.5 };
@@ -756,8 +671,7 @@ function hauntBlock(p, block) {
       sound(dim, out ? "random.fizz" : "fire.ignite", c);
       msg = out ? "§7The fire dies..." : "§7The fire roars back!";
     } else if (id === "minecraft:noteblock") {
-      const notes = [0.5, 0.53, 0.6, 0.67, 0.75];
-      sound(dim, "note.harp", c, notes[Math.floor(Math.random() * notes.length)]);
+      sound(dim, "note.harp", c, pick([0.5, 0.53, 0.6, 0.67, 0.75]));
       msg = "§7An eerie note rings out...";
     } else if (id === "minecraft:bell") {
       sound(dim, "block.bell.hit", c, 0.7);
@@ -788,21 +702,25 @@ function reapSweep(p) {
   const dim = p.dimension;
   const head = p.getHeadLocation();
   const view = p.getViewDirection();
-  let hits = 0;
-  for (const s of dim.getEntities({ type: LOST_SOUL, location: head, maxDistance: 5 })) {
-    const dx = s.location.x - head.x, dy = s.location.y + 0.6 - head.y, dz = s.location.z - head.z;
-    const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-    if ((dx * view.x + dy * view.y + dz * view.z) / len > 0.35) { spiritDamage(s, 4, p); hits++; }
+  const d = dives.get(p.id);
+  let hit = false;
+  if (d && d.phase === "running" && d.trial === "duel") {
+    const s = getEntity(d.spiritId);
+    if (s) {
+      const dx = s.location.x - head.x, dy = s.location.y + 0.8 - head.y, dz = s.location.z - head.z;
+      const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      if (len < 4.5 && (dx * view.x + dy * view.y + dz * view.z) / len > 0.35) { strikeSpirit(p, d, s); hit = true; }
+    }
   }
   for (let i = -2; i <= 2; i++) {
     const a = Math.atan2(view.z, view.x) + i * 0.3;
     particle(dim, "minecraft:soul_particle", { x: head.x + Math.cos(a) * 2.2, y: head.y - 0.3, z: head.z + Math.sin(a) * 2.2 });
   }
   sound(dim, "game.player.attack.strong", head, 0.6);
-  if (!hits) flash(p, "§7Your scythe cuts through empty air...", 30);
+  if (!hit) flash(p, "§7Your scythe cuts through empty air...", 30);
 }
 
-function spiritSense(p, title = "Spirit Sense") {
+function spiritSense(p, heading = "Spirit Sense") {
   const dim = p.dimension;
   let living, ld = Infinity;
   for (const o of dim.getPlayers({ location: p.location, maxDistance: 128 })) {
@@ -810,25 +728,26 @@ function spiritSense(p, title = "Spirit Sense") {
     const d = dist(o.location, p.location);
     if (d < ld) { ld = d; living = o; }
   }
-  let soul, sd = Infinity;
-  for (const s of dim.getEntities({ type: LOST_SOUL, location: p.location, maxDistance: 64 })) {
-    const d = dist(s.location, p.location);
-    if (d < sd) { sd = d; soul = s; }
-  }
   let corpse, cd = Infinity;
   for (const c of dim.getEntities({ families: ["ghost_corpse"], location: p.location, maxDistance: 64 })) {
     const d = dist(c.location, p.location);
     if (d < cd) { cd = d; corpse = c; }
   }
-  const spot = nearestSpot(p);
-  p.sendMessage(`§8--- §f${title} §8---`);
+  let mind, md = Infinity;
+  try {
+    for (const m of dim.getEntities({ families: ["mob"], location: p.location, maxDistance: 48, excludeFamilies: ["ghost_vessel", "ghost_corpse"] })) {
+      if (!MOB_TO_BODY[m.typeId]) continue;
+      const d = dist(m.location, p.location);
+      if (d < md) { md = d; mind = m; }
+    }
+  } catch { /* ignore */ }
+  p.sendMessage(`§8--- §f${heading} §8---`);
   p.sendMessage(living ? `§cLiving soul: §f${living.name} §7${Math.round(ld)}m ${directionWord(p, living.location)}` : "§7No living souls nearby.");
-  p.sendMessage(soul ? `§fLost soul: §7${Math.round(sd)}m ${directionWord(p, soul.location)}` : "§7No lost souls nearby.");
   p.sendMessage(corpse ? `§5Corpse: §7${(corpse.nameTag || "").replace(/§./g, "")} ${Math.round(cd)}m ${directionWord(p, corpse.location)}` : "§7No corpses nearby.");
-  p.sendMessage(spot ? `§dHaunted block: §7${spot.d}m ${directionWord(p, spot.spot)}` : "§7No haunted blocks sensed... yet.");
+  p.sendMessage(mind ? `§dMind to invade: §7${BODIES[MOB_TO_BODY[mind.typeId]].name} ${Math.round(md)}m ${directionWord(p, mind.location)} §8(${TRIALS[BODIES[MOB_TO_BODY[mind.typeId]].trial].name})` : "§7No minds to invade nearby.");
   try { p.playSound("beacon.power", { pitch: 1.5 }); } catch { /* ignore */ }
 
-  const target = living?.location ?? soul?.location ?? corpse?.location ?? (spot ? { x: spot.spot.x + 0.5, y: spot.spot.y + 1, z: spot.spot.z + 0.5 } : undefined);
+  const target = living?.location ?? corpse?.location ?? mind?.location;
   if (target) {
     const h = p.getHeadLocation();
     const dx = target.x - h.x, dy = target.y - h.y, dz = target.z - h.z;
@@ -857,7 +776,7 @@ function wail(p) {
     scared++;
   }
   try {
-    for (const m of dim.getEntities({ location: loc, maxDistance: 12, families: ["mob"], excludeTypes: ["minecraft:player", LOST_SOUL], excludeFamilies: ["ghost_vessel", "ghost_corpse"] })) {
+    for (const m of dim.getEntities({ location: loc, maxDistance: 12, families: ["mob"], excludeTypes: ["minecraft:player"], excludeFamilies: ["ghost_vessel", "ghost_corpse"], excludeTags: [ENTRANCED_TAG] })) {
       knockAway(m, loc, 1.0, 0.4);
     }
   } catch { /* ignore */ }
@@ -866,13 +785,7 @@ function wail(p) {
     particle(dim, "minecraft:soul_particle", { x: loc.x + Math.cos(a) * 2, y: loc.y + 1, z: loc.z + Math.sin(a) * 2 });
   }
   try { p.playSound("mob.ghast.moan", { pitch: 0.7 }); } catch { /* ignore */ }
-  if (scared > 0) {
-    const gain = Math.min(3, scared);
-    const e = addEssence(p, gain);
-    flash(p, `§fYou terrified ${scared} living soul${scared > 1 ? "s" : ""}! §b+${gain} Essence §7(${e})`, 70);
-  } else {
-    flash(p, "§7Your wail echoes through the empty land...");
-  }
+  flash(p, scared > 0 ? `§fYou terrified ${scared} living soul${scared > 1 ? "s" : ""}!` : "§7Your wail echoes through the empty land...", 60);
 }
 
 function dash(p) {
@@ -933,8 +846,7 @@ function siphon(p, target) {
   try { target.onScreenDisplay.setActionBar("§7A cold hand drains your life..."); } catch { /* ignore */ }
   sound(p.dimension, "mob.vex.hurt", target.location, 0.5);
   particle(p.dimension, "minecraft:soul_particle", { x: target.location.x, y: target.location.y + 1.2, z: target.location.z });
-  const e = addEssence(p, 1);
-  flash(p, `§cYou siphon ${target.name}'s life! §b+1 Essence §7(${e})`);
+  flash(p, `§cYou drain ${target.name}'s life!`);
 }
 
 // ============================ POSSESSION ===============================
@@ -943,7 +855,7 @@ function possessorOf(body) {
     const id = body.getDynamicProperty(DP.possessor);
     if (!id) return undefined;
     const st = possessions.get(String(id));
-    if (st && st.body.id === body.id) return world.getAllPlayers().find((o) => o.id === id);
+    if (st && st.body.id === body.id) return playerById(String(id));
   } catch { /* ignore */ }
   return undefined;
 }
@@ -976,13 +888,13 @@ function ridingBody(p, body) {
 function possess(p, body, resumed = false) {
   if (!isGhost(p) || !isValid(body)) return false;
   if (phasing.has(p.id)) { flash(p, "§7Finish phasing first."); return false; }
+  if (dives.has(p.id) && !resumed) return false;
   const key = body.typeId.slice(VESSEL_PREFIX.length);
   const def = BODIES[key];
   if (!def) return false;
   if (!resumed) {
     if (!isCorpse(body)) { flash(p, "§7Another spirit already controls that body."); return false; }
-    const cur = possessions.get(p.id);
-    if (cur) endPossession(p, "leave", true);
+    if (possessions.has(p.id)) endPossession(p, "leave", true);
     body.triggerEvent("ghost:to_possessed");
     try { body.setProperty("ghost:corpse", false); } catch { /* event sets it too */ }
   }
@@ -999,13 +911,7 @@ function possess(p, body, resumed = false) {
   const dim = body.dimension;
   burst(dim, "minecraft:soul_particle", { x: body.location.x, y: body.location.y + 0.5, z: body.location.z }, 10, 1.4);
   sound(dim, "mob.elderguardian.curse", body.location, 1.6, 0.4);
-  if (!resumed) {
-    try {
-      p.onScreenDisplay.setTitle(`§fYou possess the §7${def.name}`, {
-        subtitle: `§b${def.powerName}§7: ${def.desc}`, fadeInDuration: 5, stayDuration: 50, fadeOutDuration: 15,
-      });
-    } catch { /* ignore */ }
-  }
+  if (!resumed) title(p, `§fYou possess the §7${def.name}`, `§b${def.powerName}§7: ${def.desc}`, 50);
   system.runTimeout(() => { if (isValid(p) && isValid(body)) mount(p, body); }, 2);
   return true;
 }
@@ -1013,9 +919,8 @@ function possess(p, body, resumed = false) {
 function resumePossession(p) {
   const id = p.getDynamicProperty(DP.vessel);
   if (!id) return false;
-  let body;
-  try { body = world.getEntity(String(id)); } catch { body = undefined; }
-  if (body && isValid(body) && isVessel(body) && !isCorpse(body) && body.getDynamicProperty(DP.possessor) === p.id) {
+  const body = getEntity(id);
+  if (body && isVessel(body) && !isCorpse(body) && body.getDynamicProperty(DP.possessor) === p.id) {
     return possess(p, body, true);
   }
   p.setDynamicProperty(DP.vessel, undefined);
@@ -1050,7 +955,7 @@ function endPossession(p, reason, quiet = false) {
 function onBodyDeath(body) {
   for (const [pid, st] of possessions) {
     if (st.body.id !== body.id) continue;
-    const p = world.getAllPlayers().find((o) => o.id === pid);
+    const p = playerById(pid);
     if (p) endPossession(p, "died");
     else possessions.delete(pid);
   }
@@ -1159,9 +1064,9 @@ const POWERS = {
     if (!loc) { flash(p, "§7No target in sight."); return false; }
     const dim = st.body.dimension;
     const placed = [];
-    for (const off of [[0, 0], [0, 1]]) {
+    for (const dy of [0, 1]) {
       try {
-        const b = dim.getBlock({ x: Math.floor(loc.x), y: Math.floor(loc.y) + off[1], z: Math.floor(loc.z) });
+        const b = dim.getBlock({ x: Math.floor(loc.x), y: Math.floor(loc.y) + dy, z: Math.floor(loc.z) });
         if (b && b.isAir) { b.setType("minecraft:web"); placed.push(b); }
       } catch { /* ignore */ }
     }
@@ -1179,8 +1084,7 @@ const POWERS = {
       const hit = p.getBlockFromViewDirection({ maxDistance: 32 });
       if (hit) {
         const b = hit.block.location;
-        const face = String(hit.face);
-        const off = { Up: [0, 1, 0], Down: [0, -3, 0], North: [0, 0, -1], South: [0, 0, 1], East: [1, 0, 0], West: [-1, 0, 0] }[face] ?? [0, 1, 0];
+        const off = { Up: [0, 1, 0], Down: [0, -3, 0], North: [0, 0, -1], South: [0, 0, 1], East: [1, 0, 0], West: [-1, 0, 0] }[String(hit.face)] ?? [0, 1, 0];
         dest = { x: b.x + off[0] + 0.5, y: b.y + off[1], z: b.z + off[2] + 0.5 };
       }
     } catch { /* ignore */ }
@@ -1213,7 +1117,6 @@ const POWERS = {
     const d = flatDir(p), c = st.body.location, dim = st.body.dimension;
     for (let i = 1; i <= 10; i++) {
       const pos = { x: c.x + d.x * (1 + i * 1.2), y: c.y, z: c.z + d.z * (1 + i * 1.2) };
-      // settle each fang on the ground
       for (let k = 0; k < 4; k++) {
         try {
           const below = dim.getBlock({ x: Math.floor(pos.x), y: Math.floor(pos.y) - 1, z: Math.floor(pos.z) });
@@ -1267,7 +1170,7 @@ const POWERS = {
 
 function usePower(p) {
   const st = possessions.get(p.id);
-  if (!st) { removeItems(p, (id) => id === T.power || id === T.leave); giveGhostTools(p); return; }
+  if (!st) { giveGhostTools(p); return; }
   const cdKey = `power_${st.key}`;
   if (!ready(p, cdKey, st.def.powerName)) return;
   const fn = POWERS[st.def.power];
@@ -1310,7 +1213,6 @@ function possessionTick(p, st, tick) {
   const def = st.def;
 
   if (def.fly) {
-    // fly where you look; JUMP rises straight up
     try {
       if (Math.abs(mv.x) + Math.abs(mv.y) > 0.1 || jump) {
         const view = p.getViewDirection();
@@ -1345,7 +1247,6 @@ function possessionTick(p, st, tick) {
     } catch { /* ignore */ }
   }
 
-  // charges (stampede / ram)
   if (st.chargeUntil > tick && st.charge) {
     const d = flatDir(p);
     try {
@@ -1361,7 +1262,6 @@ function possessionTick(p, st, tick) {
     if (tick % 3 === 0) particle(body.dimension, "minecraft:basic_smoke_particle", body.location);
   }
 
-  // delayed strikes (pounce / swoop / sting)
   if (st.strike && tick >= st.strike.at) {
     const s = st.strike;
     st.strike = undefined;
@@ -1376,7 +1276,6 @@ function possessionTick(p, st, tick) {
     }
   }
 
-  // creeper fuse
   if (st.fuseAt && tick >= st.fuseAt) {
     st.fuseAt = 0;
     const loc = { ...body.location };
@@ -1389,6 +1288,520 @@ function possessionTick(p, st, tick) {
   }
 }
 
+// ============================ MIND DIVE ================================
+// Diving into a living mob: it falls into a trance while you are pulled into
+// its brain - an arena built in the void of The End. Beat its trial to take
+// over its body; fail and you are thrown back out.
+
+function freeSlot() {
+  const used = new Set([...dives.values()].map((d) => d.slot));
+  for (let i = 0; i < MIND.slots; i++) if (!used.has(i)) return i;
+  return -1;
+}
+
+function entrance(mob, pid) {
+  mob.addTag(ENTRANCED_TAG);
+  mob.setDynamicProperty(DP.entrancedBy, pid);
+  mob.setDynamicProperty(DP.origName, mob.nameTag ?? "");
+  mob.setDynamicProperty(DP.freezeAt, JSON.stringify(mob.location));
+  // a name stops the body from despawning while its mind is away
+  mob.nameTag = `§5Entranced ${BODIES[MOB_TO_BODY[mob.typeId]].name}`;
+  effect(mob, "slowness", 12000, 10);
+  effect(mob, "weakness", 12000, 255);
+  effect(mob, "resistance", 12000, 255);
+}
+
+function release(mob, guardMs) {
+  try {
+    mob.removeTag(ENTRANCED_TAG);
+    const orig = mob.getDynamicProperty(DP.origName);
+    mob.nameTag = typeof orig === "string" ? orig : "";
+    for (const k of [DP.entrancedBy, DP.origName, DP.freezeAt]) mob.setDynamicProperty(k, undefined);
+    for (const e of ["slowness", "weakness", "resistance"]) { try { mob.removeEffect(e); } catch { /* ignore */ } }
+    if (guardMs) mob.setDynamicProperty(DP.guard, Date.now() + guardMs);
+    burst(mob.dimension, "minecraft:soul_particle", { x: mob.location.x, y: mob.location.y + 1, z: mob.location.z }, 6);
+    sound(mob.dimension, "mob.vex.death", mob.location, 0.6);
+  } catch { /* ignore */ }
+}
+
+function startDive(p, mob) {
+  if (!isGhost(p) || dives.has(p.id)) return;
+  if (possessions.has(p.id)) { flash(p, "§7Leave your body before diving into another mind."); return; }
+  if (phasing.has(p.id)) return;
+  if (isPlayer(mob)) { flash(p, "§7A living player's mind is far too strong to enter."); return; }
+  if (isCorpse(mob)) { possess(p, mob); return; }
+  const key = MOB_TO_BODY[mob.typeId];
+  if (!key) { flash(p, "§7This creature's mind is too strange to enter."); return; }
+  if (mob.hasTag(ENTRANCED_TAG)) { flash(p, "§7Another spirit is already inside its mind."); return; }
+  const guard = Number(mob.getDynamicProperty(DP.guard) ?? 0);
+  if (guard > Date.now()) { flash(p, `§7Its mind is on guard... try again in §f${Math.ceil((guard - Date.now()) / 1000)}s`); return; }
+  if (!ready(p, "dive", "Mind Dive")) return;
+  const slot = freeSlot();
+  if (slot < 0) { flash(p, "§7The mind realm is crowded. Try again soon."); return; }
+  useCooldown(p, "dive");
+
+  const def = BODIES[key];
+  const ret = { dim: mob.dimension.id, x: mob.location.x, y: mob.location.y, z: mob.location.z };
+  entrance(mob, p.id);
+  const C = { x: MIND.x + slot * MIND.spacing, y: MIND.y, z: MIND.z };
+  const d = {
+    slot, C, key, def, trial: def.trial, mobId: mob.id, ret, phase: "entering", t0: now(), until: 0,
+    mindHp: 6, lives: 3, hurtCd: 0, hitCd: 0, start: undefined, checkpoint: undefined, checkpoints: [], core: undefined,
+    spiritId: undefined, spiritHit: 4, memories: new Set(), total: 0, result: undefined, returnUntil: 0,
+  };
+  dives.set(p.id, d);
+  p.setDynamicProperty(DP.dive, JSON.stringify({ mobId: mob.id, ret }));
+
+  burst(mob.dimension, "minecraft:soul_particle", { x: mob.location.x, y: mob.location.y + 1, z: mob.location.z }, 12, 1.5);
+  sound(mob.dimension, "mob.elderguardian.curse", mob.location, 0.8, 0.6);
+  fade(p, 0.4, 1.8, 1.0);
+  title(p, `§dDiving into the mind of the ${def.name}...`, `§7${TRIALS[d.trial].name}`, 50);
+  // leave the ghost form behind: inside a mind you appear as your living self
+  removeGhostTools(p);
+  for (const e of ["levitation", "slow_falling", "invisibility"]) { try { p.removeEffect(e); } catch { /* ignore */ } }
+}
+
+function areaLoaded(dim, C) {
+  const r = MIND.reach;
+  for (const [dx, dz] of [[0, 0], [-r, -r], [r, -r], [-r, r], [r, r]]) {
+    try { if (!dim.getBlock({ x: C.x + dx, y: C.y, z: C.z + dz })) return false; } catch { return false; }
+  }
+  return true;
+}
+
+function fill(dim, from, to, block) {
+  try {
+    dim.fillBlocks(new BlockVolume(from, to), block, { ignoreChunkBoundErrors: true });
+  } catch {
+    for (let x = Math.min(from.x, to.x); x <= Math.max(from.x, to.x); x++)
+      for (let y = Math.min(from.y, to.y); y <= Math.max(from.y, to.y); y++)
+        for (let z = Math.min(from.z, to.z); z <= Math.max(from.z, to.z); z++)
+          try { dim.getBlock({ x, y, z })?.setType(block); } catch { /* ignore */ }
+  }
+}
+
+function put(dim, x, y, z, block) {
+  try { dim.getBlock({ x, y, z })?.setType(block); } catch { /* ignore */ }
+}
+
+function clearArena(dim, C) {
+  const r = MIND.reach + 2;
+  for (let y = C.y - 8; y <= C.y + 20; y += 10) {
+    fill(dim, { x: C.x - r, y, z: C.z - r }, { x: C.x + r, y: Math.min(y + 9, C.y + 20), z: C.z + r }, "minecraft:air");
+  }
+  try {
+    for (const e of dim.getEntities({ location: C, maxDistance: MIND.reach * 1.8 })) if (!isPlayer(e)) e.remove();
+  } catch { /* ignore */ }
+}
+
+function disk(dim, cx, y, cz, r, palette) {
+  for (let x = -r; x <= r; x++) {
+    for (let z = -r; z <= r; z++) {
+      if (x * x + z * z <= r * r + r) put(dim, cx + x, y, cz + z, (x * 3 + z * 7 + ((x * z) & 3)) % 5 === 0 ? palette[1] : (x + z) % 7 === 0 ? palette[2] : palette[0]);
+    }
+  }
+}
+
+function ring(dim, cx, y0, cz, r, height, block) {
+  for (let a = 0; a < 360; a += 3) {
+    const x = Math.round(cx + Math.cos((a * Math.PI) / 180) * r);
+    const z = Math.round(cz + Math.sin((a * Math.PI) / 180) * r);
+    fill(dim, { x, y: y0, z }, { x, y: y0 + height - 1, z }, block);
+  }
+}
+
+function core(dim, x, y, z) {
+  put(dim, x, y, z, "minecraft:sea_lantern");
+  put(dim, x, y + 1, z, "minecraft:end_rod");
+}
+
+// --- the four mind trials ---
+function buildDuel(p, d, dim) {
+  const { C } = d;
+  const pal = d.def.palette ?? BRAIN;
+  disk(dim, C.x, C.y, C.z, 10, pal);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    put(dim, Math.round(C.x + Math.cos(a) * 7), C.y, Math.round(C.z + Math.sin(a) * 7), "minecraft:sea_lantern");
+  }
+  ring(dim, C.x, C.y + 1, C.z, 11, 7, "minecraft:barrier");
+  for (let x = -11; x <= 11; x++) for (let z = -11; z <= 11; z++) if (x * x + z * z <= 132) put(dim, C.x + x, C.y + 8, C.z + z, "minecraft:barrier");
+  d.start = { x: C.x - 7 + 0.5, y: C.y + 1, z: C.z + 0.5 };
+  d.face = { x: C.x + 7, y: C.y + 1, z: C.z };
+  const s = dim.spawnEntity(BODY_TO_MOB[d.key], { x: C.x + 7.5, y: C.y + 1, z: C.z + 0.5 });
+  s.nameTag = `§fSpirit of the ${d.def.name}`;
+  s.addTag(SPIRIT_TAG);
+  s.setDynamicProperty(DP.owner, p.id);
+  effect(s, "speed", 20 * 300, 0);
+  try { d.spiritHit = Math.max(4, Math.ceil(s.getComponent("minecraft:health").effectiveMax / 7)); } catch { d.spiritHit = 4; }
+  d.spiritId = s.id;
+}
+
+function buildParkour(p, d, dim) {
+  // a rising spiral of floating thoughts around the centre, ending at the Brain Core
+  const { C } = d;
+  const pal = d.def.palette ?? BRAIN;
+  let ang = 0, r = 13, y = C.y;
+  let px = Math.round(C.x + r), pz = C.z;
+  fill(dim, { x: px - 1, y, z: pz - 1 }, { x: px + 1, y, z: pz + 1 }, pal[0]);
+  d.start = { x: px + 0.5, y: y + 1, z: pz + 0.5 };
+  d.checkpoints = [];
+  const steps = 12;
+  for (let i = 1; i <= steps + 1; i++) {
+    const last = i === steps + 1;
+    const up = !last && Math.random() < 0.5 && y < C.y + 9 ? 1 : 0;
+    ang += (up ? 2.6 : pick([2.8, 3.2, 3.6])) / r;
+    r = Math.max(8, r - 0.45);
+    let nx = Math.round(C.x + Math.cos(ang) * r), nz = Math.round(C.z + Math.sin(ang) * r);
+    // keep the jump makeable: centre-to-centre between 2.2 and 3.2 (up) / 4.2 (flat) blocks
+    const dx = nx - px, dz = nz - pz, dd = Math.sqrt(dx * dx + dz * dz) || 1;
+    const want = Math.min(up ? 3.2 : 4.2, Math.max(2.2, dd));
+    nx = Math.round(px + (dx / dd) * want); nz = Math.round(pz + (dz / dd) * want);
+    y += up;
+    if (last) {
+      fill(dim, { x: nx - 1, y, z: nz - 1 }, { x: nx + 1, y, z: nz + 1 }, pal[0]);
+      core(dim, nx, y + 1, nz);
+      d.core = { x: nx + 0.5, y: y + 1, z: nz + 0.5 };
+    } else if (i === Math.ceil(steps / 2)) {
+      fill(dim, { x: nx - 1, y, z: nz - 1 }, { x: nx + 1, y, z: nz + 1 }, "minecraft:pearlescent_froglight");
+      d.checkpoints.push({ x: nx + 0.5, y: y + 1, z: nz + 0.5 });
+    } else if (i > 8 && Math.random() < 0.5) {
+      put(dim, nx, y, nz, pick(pal));               // tiny thoughts near the end
+    } else {
+      fill(dim, { x: nx, y, z: nz }, { x: nx + 1, y, z: nz + 1 }, pick(pal));
+    }
+    px = nx; pz = nz;
+  }
+  d.checkpoint = d.start;
+  d.face = { x: C.x, y: C.y + 4, z: C.z };
+}
+
+function buildMaze(p, d, dim) {
+  const { C } = d;
+  const pal = d.def.palette ?? BRAIN;
+  const N = 7, cell = 3, size = N * cell + 1;
+  const ox = C.x - Math.floor(size / 2), oz = C.z - Math.floor(size / 2);
+  fill(dim, { x: ox, y: C.y, z: oz }, { x: ox + size - 1, y: C.y, z: oz + size - 1 }, pal[1]);
+  // walls everywhere, then carve passages with a randomised depth-first search
+  const open = new Set();
+  const key = (cx, cz) => `${cx},${cz}`;
+  const stack = [[0, 0]];
+  const seen = new Set([key(0, 0)]);
+  while (stack.length) {
+    const [cx, cz] = stack[stack.length - 1];
+    const next = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => [cx + a, cz + b])
+      .filter(([a, b]) => a >= 0 && b >= 0 && a < N && b < N && !seen.has(key(a, b)));
+    if (!next.length) { stack.pop(); continue; }
+    const [nx, nz] = pick(next);
+    seen.add(key(nx, nz));
+    open.add(`${Math.min(cx, nx)},${Math.min(cz, nz)},${nx !== cx ? "x" : "z"}`);
+    stack.push([nx, nz]);
+  }
+  for (let gx = 0; gx < size; gx++) {
+    for (let gz = 0; gz < size; gz++) {
+      const onX = gx % cell === 0, onZ = gz % cell === 0;
+      let wall = false;
+      if (onX && onZ) wall = true;
+      else if (onX) {
+        const cx = gx / cell - 1, cz = Math.floor(gz / cell);
+        wall = cx < 0 || cx >= N - 1 || !open.has(`${cx},${cz},x`);
+      } else if (onZ) {
+        const cz = gz / cell - 1, cx = Math.floor(gx / cell);
+        wall = cz < 0 || cz >= N - 1 || !open.has(`${cx},${cz},z`);
+      }
+      if (wall) fill(dim, { x: ox + gx, y: C.y + 1, z: oz + gz }, { x: ox + gx, y: C.y + 3, z: oz + gz }, (gx + gz) % 4 === 0 ? pal[2] : pal[0]);
+      else if ((gx * 7 + gz * 3) % 11 === 0) put(dim, ox + gx, C.y, oz + gz, "minecraft:sea_lantern");
+    }
+  }
+  d.start = { x: ox + 2, y: C.y + 1, z: oz + 2 };
+  const end = (N - 1) * cell;
+  core(dim, ox + end + 1, C.y, oz + end + 1);
+  d.core = { x: ox + end + 1.5, y: C.y + 1, z: oz + end + 1.5 };
+  d.face = d.core;
+}
+
+function buildMemories(p, d, dim) {
+  const { C } = d;
+  const pal = d.def.palette ?? BRAIN;
+  disk(dim, C.x, C.y, C.z, 12, pal);
+  ring(dim, C.x, C.y + 1, C.z, 13, 4, "minecraft:barrier");
+  const spots = [];
+  for (let i = 0; i < 4; i++) {          // raised "lobes" with steps up to them
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    const lx = Math.round(C.x + Math.cos(a) * 8), lz = Math.round(C.z + Math.sin(a) * 8);
+    const h = 1 + (i % 2);
+    fill(dim, { x: lx - 1, y: C.y + 1, z: lz - 1 }, { x: lx + 1, y: C.y + h, z: lz + 1 }, pal[1]);
+    put(dim, Math.round(C.x + Math.cos(a) * 6), C.y + 1, Math.round(C.z + Math.sin(a) * 6), pal[2]);
+    spots.push({ x: lx + 0.5, y: C.y + h + 1.4, z: lz + 0.5 });
+  }
+  spots.push({ x: C.x + 4.5, y: C.y + 1.4, z: C.z - 3.5 }, { x: C.x - 4.5, y: C.y + 1.4, z: C.z + 2.5 });
+  for (const s of spots) {
+    try {
+      const m = dim.spawnEntity(MEMORY, s);
+      m.setDynamicProperty(DP.owner, p.id);
+      d.memories.add(m.id);
+    } catch { /* ignore */ }
+  }
+  d.total = d.memories.size;
+  d.start = { x: C.x + 0.5, y: C.y + 1, z: C.z + 0.5 };
+  d.face = spots[0];
+}
+
+const BUILDERS = { duel: buildDuel, parkour: buildParkour, maze: buildMaze, memories: buildMemories };
+
+function enterMind(p, d, dim) {
+  clearArena(dim, d.C);
+  BUILDERS[d.trial](p, d, dim);
+  try { p.teleport(d.start, { dimension: dim, facingLocation: d.face }); } catch { /* ignore */ }
+  giveMindTools(p, d.trial);
+  applyMindEffects(p);
+  d.phase = "running";
+  d.until = now() + TRIALS[d.trial].time * 20;
+  flashes.delete(p.id);
+  title(p, `§d${TRIALS[d.trial].name}`, `§f${TRIALS[d.trial].goal(d.def.name)}`, 70);
+  try { p.playSound("beacon.activate", { pitch: 0.7 }); } catch { /* ignore */ }
+}
+
+function hurtMind(p, d, by) {
+  if (d.phase !== "running" || now() < d.hurtCd) return;
+  d.hurtCd = now() + 10;
+  d.mindHp -= 1;
+  fade(p, 0.05, 0.05, 0.3, { red: 0.6, green: 0, blue: 0 });
+  try { p.playSound("game.player.hurt", { pitch: 0.7 }); } catch { /* ignore */ }
+  if (d.mindHp <= 0) endDive(p, "fail", `§cThe Spirit of the ${d.def.name} overwhelmed your mind!`);
+}
+
+function strikeSpirit(p, d, spirit) {
+  if (now() < d.hitCd) return;
+  d.hitCd = now() + 8;
+  spiritDamage(spirit, d.spiritHit, p);
+  burst(spirit.dimension, "minecraft:soul_particle", { x: spirit.location.x, y: spirit.location.y + 1, z: spirit.location.z }, 4);
+}
+
+function onSpiritDeath(spirit) {
+  for (const [pid, d] of dives) {
+    if (d.spiritId !== spirit.id) continue;
+    const p = playerById(pid);
+    if (p) endDive(p, "win");
+  }
+}
+
+function runTrial(p, d, tick) {
+  if (p.dimension.id !== MIND.dim) { endDive(p, "abort", "§7You were pulled out of the mind."); return; }
+  if (tick >= d.until) { endDive(p, "fail", "§cTime ran out! The mind shakes you loose."); return; }
+  if (tick % 20 === 0) applyMindEffects(p);
+  const loc = p.location;
+
+  if (loc.y < d.C.y - 6) {
+    if (d.trial === "parkour") {
+      d.lives -= 1;
+      if (d.lives <= 0) { endDive(p, "fail", "§cYou fell out of its thoughts!"); return; }
+      flash(p, `§cYou slipped! §f${d.lives} §ctr${d.lives === 1 ? "y" : "ies"} left`, 50);
+    }
+    try { p.teleport(d.checkpoint ?? d.start, { dimension: p.dimension }); } catch { /* ignore */ }
+    return;
+  }
+
+  if (d.trial === "duel") {
+    const s = getEntity(d.spiritId);
+    if (!s) { endDive(p, "win"); return; }
+    if (dist(s.location, d.C) > 16) try { s.teleport({ x: d.C.x + 0.5, y: d.C.y + 1, z: d.C.z + 0.5 }); } catch { /* ignore */ }
+    if (tick % 15 === 0) particle(s.dimension, "minecraft:soul_particle", { x: s.location.x, y: s.location.y + 2.2, z: s.location.z });
+  } else if (d.trial === "parkour" || d.trial === "maze") {
+    for (const cp of d.checkpoints) {
+      if (d.checkpoint !== cp && dist(loc, cp) < 1.8) {
+        d.checkpoint = cp;
+        flash(p, "§aCheckpoint!", 40);
+        try { p.playSound("random.orb", { pitch: 1.2 }); } catch { /* ignore */ }
+      }
+    }
+    if (d.core && dist(loc, d.core) < 1.9) { endDive(p, "win"); return; }
+    if (tick % 10 === 0) burst(p.dimension, "minecraft:electric_spark_particle", { x: d.core.x, y: d.core.y + 1, z: d.core.z }, 3, 1.5);
+  } else if (d.trial === "memories") {
+    for (const id of [...d.memories]) {
+      const m = getEntity(id);
+      if (!m) { d.memories.delete(id); continue; }
+      if (dist(m.location, { x: loc.x, y: loc.y + 0.9, z: loc.z }) < 1.7) collectMemory(p, d, m);
+    }
+    if (d.memories.size === 0) { endDive(p, "win"); return; }
+  }
+  if (tick % 8 === 0) {
+    particle(p.dimension, "minecraft:electric_spark_particle", { x: loc.x + (Math.random() - 0.5) * 16, y: loc.y + Math.random() * 6, z: loc.z + (Math.random() - 0.5) * 16 });
+  }
+}
+
+function collectMemory(p, d, m) {
+  d.memories.delete(m.id);
+  burst(m.dimension, "minecraft:totem_particle", m.location, 6, 0.8);
+  try { m.remove(); } catch { /* ignore */ }
+  const got = d.total - d.memories.size;
+  try { p.playSound("random.orb", { pitch: 0.8 + got * 0.1 }); } catch { /* ignore */ }
+  flash(p, `§dMemory caught! §f${got}/${d.total}`, 30);
+}
+
+function diveHud(p, d) {
+  const f = flashes.get(p.id);
+  if (f && f.until > now()) return;
+  const left = Math.max(0, Math.ceil((d.until - now()) / 20));
+  const parts = [`§d${TRIALS[d.trial].name}`];
+  if (d.trial === "duel") {
+    const s = getEntity(d.spiritId);
+    let hp = "?";
+    try { const h = s.getComponent("minecraft:health"); hp = `${Math.ceil(h.currentValue)}/${Math.round(h.effectiveMax)}`; } catch { /* ignore */ }
+    parts.push(`§fSpirit §c${hp}`, `§fMind §c${"|".repeat(Math.max(0, d.mindHp))}`);
+  } else if (d.trial === "parkour") {
+    parts.push(`§fTries §a${d.lives}`, `§fCore §7${Math.round(dist(p.location, d.core))}m`);
+  } else if (d.trial === "maze") {
+    parts.push(`§fCore §7${Math.round(dist(p.location, d.core))}m ${directionWord(p, d.core)}`);
+  } else {
+    parts.push(`§fMemories §d${d.total - d.memories.size}/${d.total}`);
+  }
+  parts.push(`${left <= 15 ? "§c" : "§7"}${fmtTime(left)}`);
+  try { p.onScreenDisplay.setActionBar(parts.join(" §8| ")); } catch { /* ignore */ }
+}
+
+function teardown(d) {
+  try {
+    const dim = world.getDimension(MIND.dim);
+    for (const e of dim.getEntities({ location: d.C, maxDistance: MIND.reach * 1.8 })) if (!isPlayer(e)) e.remove();
+  } catch { /* ignore */ }
+}
+
+/** Finish a dive: win, fail, abort or body_died. Sends the player back to the mob. */
+function endDive(p, result, message) {
+  const d = dives.get(p.id);
+  if (!d || d.phase === "returning") return;
+  teardown(d);
+  d.result = result;
+  d.phase = "returning";
+  d.returnUntil = now() + MIND.returnTicks;
+  fade(p, 0.3, 1.2, 0.8, result === "win" ? { red: 1, green: 1, blue: 1 } : { red: 0, green: 0, blue: 0 });
+  if (result === "win") {
+    title(p, "§fMIND CONQUERED", `§7You seize control of the ${d.def.name}`, 60);
+    try { p.playSound("random.totem", { pitch: 1.2 }); } catch { /* ignore */ }
+  } else if (result === "body_died") {
+    title(p, "§cIts body was slain!", "§7...but its corpse remains. Tap it to possess it.", 60);
+  } else {
+    title(p, "§cEXPELLED", message ?? "§7The mind threw you out.", 60);
+    try { p.playSound("mob.elderguardian.curse", { pitch: 0.6 }); } catch { /* ignore */ }
+  }
+  removeItems(p, (id) => id === T.escape || id === T.reaper);
+  applyGhostEffects(p);
+  try {
+    p.teleport({ x: d.ret.x, y: d.ret.y + 0.5, z: d.ret.z }, { dimension: world.getDimension(d.ret.dim) });
+  } catch { /* ignore */ }
+}
+
+function finishDive(p, d, mob) {
+  dives.delete(p.id);
+  p.setDynamicProperty(DP.dive, undefined);
+  if (d.result === "win") {
+    const dim = mob ? mob.dimension : world.getDimension(d.ret.dim);
+    const loc = mob ? { ...mob.location } : { x: d.ret.x, y: d.ret.y, z: d.ret.z };
+    let rot = 0;
+    try { rot = mob ? mob.getRotation().y : 0; } catch { /* ignore */ }
+    let name = d.def.name;
+    if (mob) {
+      const orig = mob.getDynamicProperty(DP.origName);
+      if (typeof orig === "string" && orig) name = orig;
+      try { mob.remove(); } catch { /* ignore */ }
+    } else {
+      markConsumed(d.mobId);
+    }
+    let body;
+    try {
+      body = dim.spawnEntity(VESSEL_PREFIX + d.key, loc);
+      try { body.setRotation({ x: 0, y: rot }); } catch { /* ignore */ }
+      body.setDynamicProperty(DP.born, Date.now());
+      body.setDynamicProperty(DP.mobName, name);
+    } catch { /* ignore */ }
+    system.runTimeout(() => {
+      if (!isValid(p)) return;
+      if (!(body && possess(p, body))) giveGhostTools(p);
+    }, 2);
+  } else {
+    if (mob) release(mob, d.result === "fail" ? MIND.guardMs : 15000);
+    giveGhostTools(p);
+    if (d.result === "fail") flash(p, `§7The ${d.def.name} shakes off your intrusion. Its mind is guarded for a while.`, 80);
+  }
+}
+
+function returnTick(p, d, tick) {
+  if (p.dimension.id !== d.ret.dim && tick < d.returnUntil) return; // still travelling
+  const mob = getEntity(d.mobId);
+  if (mob || tick >= d.returnUntil) finishDive(p, d, mob);
+}
+
+function diveTick(p, d, tick) {
+  if (d.phase === "entering") {
+    if (tick - d.t0 >= 10) {
+      d.phase = "loading";
+      try { p.teleport({ x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 }, { dimension: world.getDimension(MIND.dim) }); } catch { /* ignore */ }
+    }
+  } else if (d.phase === "loading") {
+    const dim = world.getDimension(MIND.dim);
+    const hover = { x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 };
+    const away = p.dimension.id !== MIND.dim;
+    if ((away && (tick - d.t0) % 20 === 0) || (!away && dist(p.location, hover) > 1.5)) {
+      try { p.teleport(hover, { dimension: dim }); } catch { /* ignore */ }
+    }
+    if (p.dimension.id === MIND.dim && tick - d.t0 > 20 && areaLoaded(dim, d.C)) enterMind(p, d, dim);
+    else if (tick - d.t0 > MIND.loadTicks) endDive(p, "abort", "§7The mind would not open. Try again.");
+  } else if (d.phase === "running") {
+    runTrial(p, d, tick);
+    if (dives.get(p.id)?.phase === "running" && tick % 5 === 0) diveHud(p, d);
+  } else if (d.phase === "returning") {
+    returnTick(p, d, tick);
+  }
+}
+
+/** Drop a dive immediately (death, revive, logout) - the mob is released by the cleanup loop. */
+function abandonDive(p) {
+  const d = dives.get(p.id);
+  if (!d) return;
+  teardown(d);
+  dives.delete(p.id);
+  p.setDynamicProperty(DP.dive, undefined);
+  const mob = getEntity(d.mobId);
+  if (mob) release(mob, 0);
+}
+
+/** After a reload / rejoin: the player may still be standing in a mind arena. */
+function recoverDive(p) {
+  const raw = p.getDynamicProperty(DP.dive);
+  if (typeof raw !== "string" || dives.has(p.id)) return false;
+  p.setDynamicProperty(DP.dive, undefined);
+  let info;
+  try { info = JSON.parse(raw); } catch { return false; }
+  if (p.dimension.id === MIND.dim && info?.ret) {
+    try { p.teleport({ x: info.ret.x, y: info.ret.y + 0.5, z: info.ret.z }, { dimension: world.getDimension(info.ret.dim) }); } catch { /* ignore */ }
+  }
+  giveGhostTools(p);
+  flash(p, "§7You wake from the mind you were exploring.", 60);
+  return true;
+}
+
+function markConsumed(id) {
+  let list = [];
+  try { list = JSON.parse(String(world.getDynamicProperty("ghost:consumed") ?? "[]")); } catch { list = []; }
+  list.push(id);
+  world.setDynamicProperty("ghost:consumed", JSON.stringify(list.slice(-50)));
+}
+
+function isConsumed(id) {
+  try { return JSON.parse(String(world.getDynamicProperty("ghost:consumed") ?? "[]")).includes(id); } catch { return false; }
+}
+
+function tryDiveFromView(p) {
+  let target;
+  try {
+    target = p.getEntitiesFromViewDirection({ maxDistance: 8 })
+      .map((h) => h.entity).find((e) => !isPlayer(e) && (MOB_TO_BODY[e.typeId] || isCorpse(e)));
+  } catch { /* ignore */ }
+  if (target) startDive(p, target);
+  else flash(p, "§7Look at (or hit) a living mob to dive into its mind.", 50);
+}
+
 // ---------------------------- events ---------------------------------
 world.afterEvents.itemUse.subscribe((ev) => {
   const p = ev.source;
@@ -1398,12 +1811,14 @@ world.afterEvents.itemUse.subscribe((ev) => {
   switch (id) {
     case T.reaper: reapSweep(p); break;
     case T.hand: if (ready(p, "sense", "Spirit Sense")) { useCooldown(p, "sense"); spiritSense(p); } break;
+    case T.dive: tryDiveFromView(p); break;
     case T.bell: wail(p); break;
     case T.wisp: dash(p); break;
     case T.veil: startPhase(p); break;
-    case T.heart: tryRevive(p, "self"); break;
+    case T.heart: tryRevive(p); break;
     case T.power: usePower(p); break;
     case T.leave: if (possessions.has(p.id)) endPossession(p, "leave"); else giveGhostTools(p); break;
+    case T.escape: if (dives.has(p.id)) endDive(p, "abort", "§7You fled the mind."); else giveGhostTools(p); break;
   }
 });
 
@@ -1428,7 +1843,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
   if (now() - last < CFG.cooldowns.haunt) return;
   lastHaunt.set(p.id, now());
   const block = ev.block;
-  system.run(() => { if (isValid(p) && isGhost(p)) hauntBlock(p, block); });
+  system.run(() => { if (isValid(p) && isGhost(p) && !dives.has(p.id)) hauntBlock(p, block); });
 });
 
 world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
@@ -1437,25 +1852,48 @@ world.beforeEvents.playerInteractWithEntity.subscribe((ev) => {
 });
 
 world.afterEvents.entityHitEntity.subscribe((ev) => {
-  const p = ev.damagingEntity;
+  const attacker = ev.damagingEntity;
   const target = ev.hitEntity;
-  if (!isPlayer(p) || !target || !isGhost(p)) return;
-  const st = possessions.get(p.id);
-  if (target.typeId === LOST_SOUL) {
-    const held = heldItem(p)?.typeId;
-    spiritDamage(target, held === T.reaper ? 5 : st ? 3 : 2, p);
-    particle(p.dimension, "minecraft:soul_particle", { x: target.location.x, y: target.location.y + 0.8, z: target.location.z });
+  if (!attacker || !target) return;
+
+  // something in a mind arena hit a diver
+  if (isPlayer(target) && dives.has(target.id) && attacker.id !== target.id) {
+    const d = dives.get(target.id);
+    if (d.phase === "running") hurtMind(target, d, attacker);
+    return;
+  }
+  const p = attacker;
+  if (!isPlayer(p) || !isGhost(p)) return;
+  const d = dives.get(p.id);
+  if (d) {
+    if (d.phase === "running" && d.trial === "duel" && target.id === d.spiritId) strikeSpirit(p, d, target);
+    else if (d.phase === "running" && target.typeId === MEMORY) collectMemory(p, d, target);
     return;
   }
   if (isCorpse(target)) { possess(p, target); return; }
   if (target.typeId === GRAVESTONE || (isPlayer(target) && isGhost(target))) return;
+  const st = possessions.get(p.id);
   if (st) {
     if (target.id !== st.body.id) bodyMelee(p, st, target);
     return;
   }
   const held = heldItem(p)?.typeId;
-  if (held === T.hand) shove(p, target);
+  if (held === T.dive) startDive(p, target);
+  else if (held === T.hand) shove(p, target);
   else if (held === T.reaper && isPlayer(target)) siphon(p, target);
+});
+
+world.afterEvents.projectileHitEntity.subscribe((ev) => {
+  let hit;
+  try { hit = ev.getEntityHit()?.entity; } catch { hit = undefined; }
+  if (hit && isPlayer(hit) && dives.has(hit.id)) {
+    const d = dives.get(hit.id);
+    if (d.phase === "running") hurtMind(hit, d, ev.source);
+  }
+  const info = ownProjectiles.get(ev.projectile?.id);
+  if (!info) return;
+  ownProjectiles.delete(ev.projectile.id);
+  if (hit) effect(hit, info.effect[0], info.effect[1], info.effect[2]);
 });
 
 world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
@@ -1463,14 +1901,14 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   const g = ev.target;
   if (!g) return;
   if (isCorpse(g)) {
-    if (isGhost(p)) possess(p, g);
+    if (isGhost(p) && !dives.has(p.id)) possess(p, g);
     return;
   }
   if (g.typeId !== GRAVESTONE) return;
   const ownerId = g.getDynamicProperty(DP.owner);
-  const owner = world.getAllPlayers().find((o) => o.id === ownerId);
+  const owner = playerById(ownerId);
   if (p.id === ownerId) {
-    if (isGhost(p)) tryRevive(p, "self");
+    if (isGhost(p)) tryRevive(p);
     return;
   }
   if (isGhost(p)) { flash(p, "§7This grave belongs to another spirit."); return; }
@@ -1492,24 +1930,12 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   revive(owner, true);
 });
 
-// feel it when your body gets hurt
 world.afterEvents.entityHurt.subscribe((ev) => {
   const body = ev.hurtEntity;
   if (!isVessel(body)) return;
   const p = possessorOf(body);
   if (!p) return;
   try { p.playSound("game.player.hurt", { pitch: 0.8 }); } catch { /* ignore */ }
-});
-
-// special arrows (stray frost volley)
-world.afterEvents.projectileHitEntity.subscribe((ev) => {
-  const info = ownProjectiles.get(ev.projectile?.id);
-  if (!info) return;
-  ownProjectiles.delete(ev.projectile.id);
-  try {
-    const hit = ev.getEntityHit()?.entity;
-    if (hit) effect(hit, info.effect[0], info.effect[1], info.effect[2]);
-  } catch { /* ignore */ }
 });
 
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
@@ -1530,21 +1956,9 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     case "ghost:revive":
       if (target && isGhost(target)) revive(target, false);
       break;
-    case "ghost:essence":
-      if (isPlayer(src)) {
-        const e = addEssence(src, parseInt(msg) || 10);
-        src.sendMessage(`§bEssence: ${e}`);
-      }
-      break;
     case "ghost:corpse":
-      // /scriptevent ghost:corpse zombie  -> drops a corpse at your feet (for testing)
       if (isPlayer(src) && BODIES[msg]) {
-        try {
-          const c = src.dimension.spawnEntity(VESSEL_PREFIX + msg, src.location);
-          c.setDynamicProperty(DP.born, Date.now());
-          c.setDynamicProperty(DP.mobName, BODIES[msg].name);
-          c.nameTag = `§7Corpse of §f${BODIES[msg].name}`;
-        } catch { /* ignore */ }
+        spawnCorpse(src.dimension, src.location, 0, msg, BODIES[msg].name);
       } else if (isPlayer(src)) {
         src.sendMessage(`§7Bodies: ${Object.keys(BODIES).join(", ")}`);
       }
@@ -1562,8 +1976,7 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
 // ----------------------------- main loop ------------------------------
 function hud(p) {
   const f = flashes.get(p.id);
-  if (f && f.until > now()) return; // a message is showing
-  const e = getEssence(p);
+  if (f && f.until > now()) return;
   const parts = [];
   const st = possessions.get(p.id);
   if (st && isValid(st.body)) {
@@ -1575,21 +1988,22 @@ function hud(p) {
     const cd = cooldownLeft(p, `power_${st.key}`);
     parts.push(`§f${st.def.name} §cHP ${hp}`);
     parts.push(cd > 0 ? `§7${st.def.powerName} ${cd}s` : `§b${st.def.powerName} READY`);
-    parts.push(`§bEssence §f${e}`);
   } else {
-    parts.push(`§bEssence §f${e}§7/${CFG.reviveCost}`);
-    const spot = nearestSpot(p);
-    if (spot) parts.push(`§dHaunt §f${spot.d}m §7${directionWord(p, { x: spot.spot.x + 0.5, y: spot.spot.y, z: spot.spot.z + 0.5 })}`);
+    parts.push("§7Ghost");
     if (phasing.has(p.id)) parts.push(`§5Phasing ${Math.ceil((phasing.get(p.id) - now()) / 20)}s`);
+    const dv = cooldownLeft(p, "dive");
+    if (dv > 0) parts.push(`§dDive ${dv}s`);
     const wl = cooldownLeft(p, "wail");
     if (wl > 0) parts.push(`§7Wail ${wl}s`);
-    const rem = freeReviveRemaining(p);
-    parts.push(e >= CFG.reviveCost || rem <= 0 ? "§aRevive READY" : `§7Free revive ${fmtTime(rem)}`);
+    const rem = reviveRemaining(p);
+    parts.push(rem <= 0 ? "§aSoul Heart READY" : `§7Revive in ${fmtTime(rem)}`);
   }
   try { p.onScreenDisplay.setActionBar(parts.join(" §8| ")); } catch { /* ignore */ }
 }
 
 function ghostTick(p, tick) {
+  const d = dives.get(p.id);
+  if (d) { diveTick(p, d, tick); return; }
   const st = possessions.get(p.id);
   if (st) {
     possessionTick(p, st, tick);
@@ -1600,7 +2014,6 @@ function ghostTick(p, tick) {
       if (tick % 10 === 0) hud(p);
       return;
     }
-    // floating: hold jump to rise, glide otherwise, sneak to sink
     try {
       if (p.isJumping) {
         effect(p, "levitation", 4, 2);
@@ -1618,17 +2031,13 @@ function ghostTick(p, tick) {
     if (tick % 100 === 0) giveGhostTools(p);
   }
   if (tick % 10 === 0) hud(p);
-  if (tick % 20 === 0) {
-    applyGhostEffects(p);
-    maintainHauntSpots(p);
-  }
+  if (tick % 20 === 0) applyGhostEffects(p);
   if (tick % 100 === 0 && !p.hasTag(GHOST_TAG)) p.addTag(GHOST_TAG);
 }
 
-// living players near a ghost feel a cold presence
 function chillTheLiving(ghostList) {
   for (const g of ghostList) {
-    if (phasing.has(g.id) || possessions.has(g.id)) continue;
+    if (phasing.has(g.id) || possessions.has(g.id) || dives.has(g.id)) continue;
     let near = [];
     try { near = g.dimension.getPlayers({ location: g.location, maxDistance: 6 }); } catch { continue; }
     for (const o of near) {
@@ -1638,24 +2047,6 @@ function chillTheLiving(ghostList) {
       try { o.playSound("ambient.cave", { pitch: 0.8 }); } catch { /* ignore */ }
       try { o.onScreenDisplay.setActionBar("§7You feel a cold presence nearby..."); } catch { /* ignore */ }
       particle(o.dimension, "minecraft:soul_particle", { x: o.location.x, y: o.location.y + 1.5, z: o.location.z });
-    }
-  }
-}
-
-function cleanupSouls(anyGhost) {
-  for (const dimId of DIMENSIONS) {
-    let souls = [];
-    try { souls = world.getDimension(dimId).getEntities({ type: LOST_SOUL }); } catch { continue; }
-    for (const s of souls) {
-      let born = 0;
-      try { born = Number(s.getDynamicProperty(DP.born) ?? 0); } catch { /* ignore */ }
-      if (!anyGhost || born > now() || now() - born > CFG.soulLifetimeTicks) {
-        try {
-          particle(s.dimension, "minecraft:soul_particle", { x: s.location.x, y: s.location.y + 0.6, z: s.location.z });
-          soulValues.delete(s.id);
-          s.remove();
-        } catch { /* ignore */ }
-      }
     }
   }
 }
@@ -1679,9 +2070,8 @@ function cleanupBodies(anyGhost) {
             particle(b.dimension, "minecraft:sculk_soul_particle", { x: b.location.x, y: b.location.y + 0.6, z: b.location.z });
           }
         } else if (!possessorOf(b)) {
-          // its spirit is gone: hand it back if they are still here (e.g. after a reload), else it falls
           const pid = b.getDynamicProperty(DP.possessor);
-          const owner = pid ? world.getAllPlayers().find((o) => o.id === pid) : undefined;
+          const owner = pid ? playerById(pid) : undefined;
           if (!(owner && isGhost(owner) && !possessions.has(owner.id) && owner.getDynamicProperty(DP.vessel) === b.id && resumePossession(owner))) {
             makeCorpse(b);
           }
@@ -1689,6 +2079,38 @@ function cleanupBodies(anyGhost) {
       } catch { /* ignore */ }
     }
   }
+}
+
+/** Mobs left in a trance (by a dive that ended while they were unloaded) wake up; trance stays steady. */
+function cleanupMinds() {
+  for (const dimId of DIMENSIONS) {
+    let list = [];
+    try { list = world.getDimension(dimId).getEntities({ tags: [ENTRANCED_TAG] }); } catch { continue; }
+    for (const m of list) {
+      try {
+        const diver = m.getDynamicProperty(DP.entrancedBy);
+        const d = diver ? dives.get(String(diver)) : undefined;
+        if (d && d.mobId === m.id && d.phase !== "returning") {
+          burst(m.dimension, "minecraft:soul_particle", { x: m.location.x, y: m.location.y + 1.6, z: m.location.z }, 2, 0.6);
+          const at = JSON.parse(String(m.getDynamicProperty(DP.freezeAt) ?? "null"));
+          if (at && dist(at, m.location) > 2) m.teleport(at);
+        } else if (!d || d.mobId !== m.id) {
+          if (isConsumed(m.id)) m.remove();
+          else release(m, 0);
+        }
+      } catch { /* ignore */ }
+    }
+  }
+  // leftover mind spirits and memories with no diver
+  try {
+    const end = world.getDimension(MIND.dim);
+    for (const e of end.getEntities({ tags: [SPIRIT_TAG] })) {
+      if (![...dives.values()].some((d) => d.spiritId === e.id)) e.remove();
+    }
+    for (const e of end.getEntities({ type: MEMORY })) {
+      if (![...dives.values()].some((d) => d.memories.has(e.id))) e.remove();
+    }
+  } catch { /* ignore */ }
 }
 
 function cleanupGraves() {
@@ -1714,8 +2136,8 @@ system.runInterval(() => {
   }
   if (tick % 40 === 0) chillTheLiving(list);
   if (tick % 100 === 0) {
-    cleanupSouls(list.length > 0);
     cleanupBodies(list.length > 0);
+    cleanupMinds();
     for (const [id, info] of ownProjectiles) if (info.until < tick) ownProjectiles.delete(id);
   }
   if (tick % 200 === 0) {
@@ -1738,8 +2160,14 @@ world.afterEvents.playerLeave.subscribe((ev) => {
     possessions.delete(ev.playerId);
     if (isValid(st.body)) makeCorpse(st.body);
   }
+  const d = dives.get(ev.playerId);
+  if (d) {
+    teardown(d);
+    dives.delete(ev.playerId);
+    const mob = getEntity(d.mobId);
+    if (mob) release(mob, 0);
+  }
   cooldowns.delete(ev.playerId);
-  hauntSpots.delete(ev.playerId);
   phasing.delete(ev.playerId);
   flashes.delete(ev.playerId);
 });

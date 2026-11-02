@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ghost:memory",
+      "materials": {
+        "default": "breeze_eyes"
+      },
+      "textures": {
+        "default": "textures/entity/memory"
+      },
+      "geometry": {
+        "default": "geometry.ghost.memory"
+      },
+      "animations": {
+        "spin": "animation.ghost.memory.spin"
+      },
+      "scripts": {
+        "animate": [
+          "spin"
+        ]
+      },
+      "render_controllers": [
+        "controller.render.ghost_glow"
+      ]
+    }
+  }
+}

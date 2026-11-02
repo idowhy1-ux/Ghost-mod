@@ -1,5 +1,5 @@
 {
-  "resource_pack_name": "ghost_mod_v2",
+  "resource_pack_name": "ghost_mod_v3",
   "texture_name": "atlas.items",
   "texture_data": {
     "ghost_spirit_reaper": {
@@ -28,6 +28,12 @@
     },
     "ghost_body_leave": {
       "textures": "textures/items/body_leave"
+    },
+    "ghost_mind_dive": {
+      "textures": "textures/items/mind_dive"
+    },
+    "ghost_escape_mind": {
+      "textures": "textures/items/escape_mind"
     }
   }
 }

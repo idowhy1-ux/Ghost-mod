@@ -1,4 +1,4 @@
-"""Generates the possessable mob "vessels" for Ghost Mod V2.
+"""Generates the possessable mob "vessels" for Ghost Mod (V2+).
 
 A vessel is a custom entity that looks exactly like a vanilla mob (its client
 definition, models, animations and sounds are copied from Mojang's official
@@ -70,11 +70,10 @@ VESSELS = [
 ]
 
 STATIC_LANG = [
-    "pack.name=Ghost Mod V2: Possession",
-    "pack.description=Become a ghost, possess the dead, haunt the living.",
-    "entity.ghost:lost_soul.name=Lost Soul",
+    "pack.name=Ghost Mod V3: Mind Dive",
+    "pack.description=Become a ghost, possess the dead, invade the minds of the living.",
+    "entity.ghost:memory.name=Memory",
     "entity.ghost:gravestone.name=Gravestone",
-    "item.spawn_egg.entity.ghost:lost_soul.name=Spawn Lost Soul",
     "action.interact.ghost_revive=Revive",
     "action.interact.ghost_possess=Possess",
 ]
