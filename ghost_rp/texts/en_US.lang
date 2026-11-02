@@ -1,0 +1,11 @@
+entity.ghost:lost_soul.name=Lost Soul
+entity.ghost:gravestone.name=Gravestone
+item.spawn_egg.entity.ghost:lost_soul.name=Spawn Lost Soul
+item.ghost:spirit_reaper=Spirit Reaper
+item.ghost:haunting_hand=Haunting Hand
+item.ghost:wailing_bell=Wailing Bell
+item.ghost:spectral_wisp=Spectral Wisp
+item.ghost:phase_veil=Phase Veil
+item.ghost:soul_heart=Soul Heart
+item.ghost:ghost_shroud=Ghost Shroud
+action.interact.ghost_revive=Revive

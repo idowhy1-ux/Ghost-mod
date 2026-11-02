@@ -1,0 +1,15 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ghost:lost_soul",
+      "materials": { "default": "entity_alphablend" },
+      "textures": { "default": "textures/entity/lost_soul" },
+      "geometry": { "default": "geometry.ghost.lost_soul" },
+      "animations": { "float": "animation.ghost.lost_soul.float" },
+      "scripts": { "animate": [ "float" ] },
+      "render_controllers": [ "controller.render.default" ],
+      "spawn_egg": { "base_color": "#e0e0e0", "overlay_color": "#1a1a1a" }
+    }
+  }
+}

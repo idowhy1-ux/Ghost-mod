@@ -1,0 +1,13 @@
+{
+  "resource_pack_name": "ghost_mod",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "ghost_spirit_reaper": { "textures": "textures/items/spirit_reaper" },
+    "ghost_haunting_hand": { "textures": "textures/items/haunting_hand" },
+    "ghost_wailing_bell": { "textures": "textures/items/wailing_bell" },
+    "ghost_spectral_wisp": { "textures": "textures/items/spectral_wisp" },
+    "ghost_phase_veil": { "textures": "textures/items/phase_veil" },
+    "ghost_soul_heart": { "textures": "textures/items/soul_heart" },
+    "ghost_ghost_shroud": { "textures": "textures/items/ghost_shroud" }
+  }
+}

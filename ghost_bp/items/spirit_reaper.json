@@ -1,0 +1,21 @@
+{
+  "format_version": "1.20.80",
+  "minecraft:item": {
+    "description": {
+      "identifier": "ghost:spirit_reaper",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "texture": "ghost_spirit_reaper"
+      },
+      "minecraft:display_name": {
+        "value": "\u00a7fSpirit Reaper"
+      },
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true
+    }
+  }
+}

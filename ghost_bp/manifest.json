@@ -1,0 +1,28 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Ghost Mod (Behavior)",
+    "description": "Die and return as a ghost! Hunt lost souls and haunted blocks, scare the living, and earn your way back to life.",
+    "uuid": "41f86a22-4d56-4d56-a38e-1549567b6654",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 50]
+  },
+  "modules": [
+    {
+      "type": "data",
+      "uuid": "86a5e9e0-bc6a-425a-b6ee-05ec33128a07",
+      "version": [1, 0, 0]
+    },
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "cc289747-6e7d-49d9-9bb7-a81cc64b7557",
+      "entry": "scripts/main.js",
+      "version": [1, 0, 0]
+    }
+  ],
+  "dependencies": [
+    { "module_name": "@minecraft/server", "version": "1.16.0" },
+    { "uuid": "ce30a49e-bb04-4e9f-832f-58195dcab97b", "version": [1, 0, 0] }
+  ]
+}
