@@ -70,7 +70,7 @@ VESSELS = [
 ]
 
 STATIC_LANG = [
-    "pack.name=Ghost Mod V3.1: Mind Dive",
+    "pack.name=Ghost Mod V3.2: Mind Dive",
     "pack.description=Become a ghost, possess the dead, invade the minds of the living.",
     "entity.ghost:memory.name=Memory",
     "entity.ghost:gravestone.name=Gravestone",

@@ -1,5 +1,5 @@
 // =====================================================================
-//  GHOST MOD V3.1: MIND DIVE  -  Minecraft Bedrock add-on
+//  GHOST MOD V3.2: MIND DIVE  -  Minecraft Bedrock add-on
 //  (works on phone, tablet, PC and console)
 //
 //  When a player dies they come back as a see-through black & white
@@ -7,7 +7,8 @@
 //  they take over mobs:
 //    * a CORPSE can be possessed instantly - just tap it;
 //    * a LIVING mob must be conquered from the inside: dive into its
-//      brain (you are pulled into another dimension) and beat its mind
+//      brain (you are pulled into the Mind Realm, the add-on's own
+//      dimension) and beat its mind
 //      trial - a Spirit Duel, Mind Parkour, a Thought Maze or a Memory
 //      Hunt - inside a giant copy of the mob's own head, built from its real
 //      face. Win and you wake up inside its body.
@@ -19,7 +20,7 @@
 
 import {
   world, system, ItemStack, ItemLockMode, EquipmentSlot, GameMode, InputButton, ButtonState, BlockVolume,
-  EasingType, InputPermissionCategory,
+  EasingType, InputPermissionCategory, EntityDamageCause,
 } from "@minecraft/server";
 import { HEADS } from "./mind_heads.js";
 
@@ -37,15 +38,39 @@ const CFG = {
   phaseTicks: 100,
 };
 
-// The mind realm: arenas built far out in the void of The End.
+// The Mind Realm: the add-on's own empty (void) dimension, where every mind is built.
+// Nothing spawns there naturally - no endermen, no mobs - only what a trial puts in.
 const MIND = {
-  dim: "minecraft:the_end",
-  x: 40000, y: 200, z: 40000, spacing: 600, slots: 8,
+  dim: "ghost:mind_realm",
+  fallback: "minecraft:the_end", // only used if the game can't create custom dimensions
+  x: 1000, z: 1000, spacing: 600, slots: 8,
   loadTicks: 240,   // give up if the arena can't load in time
   returnTicks: 100, // how long to wait for the real mob's chunk when returning
   guardMs: 60000,   // a mob that threw you out can't be dived again for a while
   reach: 26,        // arenas stay within this many blocks of their centre
 };
+
+system.beforeEvents.startup.subscribe((ev) => {
+  try {
+    ev.dimensionRegistry.registerCustomDimension(MIND.dim);
+  } catch (e) {
+    console.warn(`[Ghost Mod] could not create the Mind Realm dimension (${e}) - minds will open in The End.`);
+  }
+});
+
+let mindDimCache;
+function mindDim() {
+  if (mindDimCache) return mindDimCache;
+  try { mindDimCache = world.getDimension(MIND.dim); } catch { mindDimCache = undefined; }
+  if (mindDimCache) return mindDimCache;
+  try { return world.getDimension(MIND.fallback); } catch { return undefined; }
+}
+function isMind(dim) {
+  try { return !!dim && dim.id === mindDim()?.id; } catch { return false; }
+}
+function arenaY() {
+  try { const r = mindDim().heightRange; return Math.max(r.min + 16, Math.min(80, r.max - 48)); } catch { return 80; }
+}
 
 const TRIALS = {
   duel: { name: "Spirit Duel", time: 120, goal: (n) => `Defeat the Spirit of the ${n}!` },
@@ -97,6 +122,7 @@ const GHOST_EFFECTS = [
   "invisibility", "weakness", "resistance", "fire_resistance", "water_breathing",
   "night_vision", "saturation", "slow_falling", "levitation",
 ];
+const ATTACK = (EntityDamageCause && EntityDamageCause.entityAttack) || "entityAttack";
 const LOCK_SLOT = (ItemLockMode && (ItemLockMode.slot ?? ItemLockMode.Slot)) || "slot";
 const CHEST = (EquipmentSlot && (EquipmentSlot.Chest ?? EquipmentSlot.chest)) || "Chest";
 const NOT_TARGETS = { excludeFamilies: ["gravestone", "ghost_corpse", "ghost_memory", "inanimate"], excludeTags: [GHOST_TAG], excludeTypes: ["minecraft:item", "minecraft:xp_orb", "minecraft:arrow"] };
@@ -286,10 +312,16 @@ function fmtTime(s) {
   return `${m}:${r < 10 ? "0" : ""}${r}`;
 }
 
+/** Knockback in direction (dx, dz) with horizontal strength h and vertical strength v. */
+function push(entity, dx, dz, h, v) {
+  try { entity.applyKnockback({ x: dx * h, z: dz * h }, v); return; } catch { /* older API signature */ }
+  try { entity.applyKnockback(dx, dz, h, v); } catch { /* ignore */ }
+}
+
 function knockAway(entity, from, h, v) {
   const dx = entity.location.x - from.x, dz = entity.location.z - from.z;
   const len = Math.sqrt(dx * dx + dz * dz) || 1;
-  try { entity.applyKnockback(dx / len, dz / len, h, v); } catch { /* ignore */ }
+  push(entity, dx / len, dz / len, h, v);
 }
 
 function flatDir(p) {
@@ -301,11 +333,11 @@ function flatDir(p) {
 /** Damage that still lands even if the target is in hurt-cooldown. */
 function spiritDamage(target, amount, source) {
   try {
-    const ok = target.applyDamage(amount, { cause: "entityAttack", damagingEntity: source });
+    const ok = target.applyDamage(amount, { cause: ATTACK, damagingEntity: source });
     if (!ok) {
       system.runTimeout(() => {
         if (isValid(target) && isValid(source)) {
-          try { target.applyDamage(amount, { cause: "entityAttack", damagingEntity: source }); } catch { /* ignore */ }
+          try { target.applyDamage(amount, { cause: ATTACK, damagingEntity: source }); } catch { /* ignore */ }
         }
       }, 10);
     }
@@ -589,11 +621,11 @@ function revive(p, atGrave) {
 
   removeGrave(p.id, grave);
   p.setDynamicProperty(DP.grave, undefined);
-  if (grave && (atGrave || p.dimension.id === MIND.dim)) {
+  if (grave && (atGrave || isMind(p.dimension))) {
     try {
       p.teleport({ x: grave.x + 0.5, y: grave.y, z: grave.z + 0.5 }, { dimension: world.getDimension(grave.dim) });
     } catch { /* ignore */ }
-  } else if (p.dimension.id === MIND.dim && back) {
+  } else if (isMind(p.dimension) && back) {
     try { p.teleport({ x: back.x, y: back.y + 0.5, z: back.z }, { dimension: world.getDimension(back.dim) }); } catch { /* ignore */ }
   }
   system.runTimeout(() => { if (isValid(p)) unstuck(p); }, 2);
@@ -914,7 +946,7 @@ function dash(p) {
   useCooldown(p, "dash");
   const v = p.getViewDirection();
   const hl = Math.sqrt(v.x * v.x + v.z * v.z) || 0.0001;
-  try { p.applyKnockback(v.x / hl, v.z / hl, 2.6 * hl, Math.max(-0.5, Math.min(1.4, v.y * 1.4 + 0.25))); } catch { /* ignore */ }
+  push(p, v.x / hl, v.z / hl, 2.6 * hl, Math.max(-0.5, Math.min(1.4, v.y * 1.4 + 0.25)));
   const dim = p.dimension;
   for (let i = 0; i < 4; i++) {
     particle(dim, "minecraft:soul_particle", { x: p.location.x - v.x * i * 0.5, y: p.location.y + 1, z: p.location.z - v.z * i * 0.5 });
@@ -946,7 +978,7 @@ function shove(p, target) {
   if (!ready(p, "shove", "Shove")) return;
   useCooldown(p, "shove");
   const d = flatDir(p);
-  try { target.applyKnockback(d.x, d.z, 1.6, 0.8); } catch { /* ignore */ }
+  push(target, d.x, d.z, 1.6, 0.8);
   if (isPlayer(target)) {
     effect(target, "nausea", 80);
     try { target.onScreenDisplay.setActionBar("§7Something invisible pushed you!"); } catch { /* ignore */ }
@@ -1378,7 +1410,7 @@ function possessionTick(p, st, tick) {
       if (st.charge.hit.has(t.id)) continue;
       st.charge.hit.add(t.id);
       hurt(st, t, st.charge.dmg);
-      try { t.applyKnockback(d.x, d.z, st.charge.knock, 0.6); } catch { /* ignore */ }
+      push(t, d.x, d.z, st.charge.knock, 0.6);
     }
     if (tick % 3 === 0) particle(body.dimension, "minecraft:basic_smoke_particle", body.location);
   }
@@ -1464,7 +1496,7 @@ function startDive(p, mob) {
   const def = BODIES[key];
   const ret = { dim: mob.dimension.id, x: mob.location.x, y: mob.location.y, z: mob.location.z };
   entrance(mob, p.id);
-  const C = { x: MIND.x + slot * MIND.spacing, y: MIND.y, z: MIND.z };
+  const C = { x: MIND.x + slot * MIND.spacing, y: arenaY(), z: MIND.z };
   const d = {
     slot, C, key, def, trial: def.trial, mobId: mob.id, ret, phase: "entering", t0: now(), until: 0,
     mindHp: 6, lives: 3, hurtCd: 0, hitCd: 0, start: undefined, checkpoint: undefined, checkpoints: [], core: undefined,
@@ -1529,7 +1561,7 @@ function breachTick(p, d, tick) {
   if (t >= 48) {
     try { p.camera.clear(); } catch { /* ignore */ }
     d.phase = "loading";
-    try { p.teleport({ x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 }, { dimension: world.getDimension(MIND.dim) }); } catch { /* ignore */ }
+    try { p.teleport({ x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 }, { dimension: mindDim() }); } catch { /* ignore */ }
   }
 }
 
@@ -1796,7 +1828,7 @@ function onSpiritDeath(spirit) {
 }
 
 function runTrial(p, d, tick) {
-  if (p.dimension.id !== MIND.dim) { endDive(p, "abort", "§7You were pulled out of the mind."); return; }
+  if (!isMind(p.dimension)) { endDive(p, "abort", "§7You were pulled out of the mind."); return; }
   if (tick >= d.until) { endDive(p, "fail", "§cTime ran out! The mind shakes you loose."); return; }
   if (tick % 20 === 0) applyMindEffects(p);
   const loc = p.location;
@@ -1839,6 +1871,9 @@ function runTrial(p, d, tick) {
     }
     if (d.memories.size === 0) { endDive(p, "win"); return; }
   }
+  if (tick % 40 === 0) {
+    try { for (const e of p.dimension.getEntities({ location: d.C, maxDistance: MIND.reach * 1.8 })) if (intruder(e)) e.remove(); } catch { /* ignore */ }
+  }
   if (tick % 8 === 0) {
     particle(p.dimension, "minecraft:electric_spark_particle", { x: loc.x + (Math.random() - 0.5) * 16, y: loc.y + Math.random() * 6, z: loc.z + (Math.random() - 0.5) * 16 });
   }
@@ -1876,7 +1911,7 @@ function diveHud(p, d) {
 
 function teardown(d) {
   try {
-    const dim = world.getDimension(MIND.dim);
+    const dim = mindDim();
     for (const e of dim.getEntities({ location: d.C, maxDistance: MIND.reach * 1.8 })) if (!isPlayer(e)) e.remove();
   } catch { /* ignore */ }
 }
@@ -1953,13 +1988,13 @@ function diveTick(p, d, tick) {
     breachTick(p, d, tick);
   } else if (d.phase === "loading") {
     if (tick - d.t0 > 80 && (tick - d.t0) % 30 === 0) fade(p, 0, 1.6, 0.4); // stay dark while the mind builds
-    const dim = world.getDimension(MIND.dim);
+    const dim = mindDim();
     const hover = { x: d.C.x + 0.5, y: d.C.y + 6, z: d.C.z + 0.5 };
-    const away = p.dimension.id !== MIND.dim;
+    const away = !isMind(p.dimension);
     if ((away && (tick - d.t0) % 20 === 0) || (!away && dist(p.location, hover) > 1.5)) {
       try { p.teleport(hover, { dimension: dim }); } catch { /* ignore */ }
     }
-    if (p.dimension.id === MIND.dim && tick - d.t0 > 20 && areaLoaded(dim, d.C)) enterMind(p, d, dim);
+    if (!away && tick - d.t0 > 20 && areaLoaded(dim, d.C)) enterMind(p, d, dim);
     else if (tick - d.t0 > MIND.loadTicks) endDive(p, "abort", "§7The mind would not open. Try again.");
   } else if (d.phase === "intro") {
     introTick(p, d, tick);
@@ -1990,7 +2025,8 @@ function recoverDive(p) {
   p.setDynamicProperty(DP.dive, undefined);
   let info;
   try { info = JSON.parse(raw); } catch { return false; }
-  if (p.dimension.id === MIND.dim && info?.ret) {
+  // (older versions built minds in The End - bring those players home too)
+  if ((isMind(p.dimension) || p.dimension.id === "minecraft:the_end") && info?.ret) {
     try { p.teleport({ x: info.ret.x, y: info.ret.y + 0.5, z: info.ret.z }, { dimension: world.getDimension(info.ret.dim) }); } catch { /* ignore */ }
   }
   resetView(p);
@@ -2146,6 +2182,18 @@ world.afterEvents.playerInteractWithEntity.subscribe((ev) => {
   if (it.amount > 1) { it.amount -= 1; container.setItem(slot, it); } else container.setItem(slot, undefined);
   owner.sendMessage(`§6${p.name} offered a Golden Apple at your grave!`);
   revive(owner, true);
+});
+
+const MIND_GUESTS = new Set(["minecraft:vex", "minecraft:evocation_fang"]); // the evoker spirit's own summons
+function intruder(e) {
+  if (!isValid(e) || isPlayer(e) || e.typeId.startsWith("ghost:") || MIND_GUESTS.has(e.typeId)) return false;
+  try { return !e.hasTag(SPIRIT_TAG) && e.matches({ families: ["mob"] }); } catch { return false; }
+}
+
+// nothing may spawn in the Mind Realm except what a trial puts there
+world.afterEvents.entitySpawn.subscribe((ev) => {
+  const e = ev.entity;
+  try { if (isMind(e.dimension) && intruder(e)) e.remove(); } catch { /* ignore */ }
 });
 
 world.afterEvents.entityHurt.subscribe((ev) => {
@@ -2323,7 +2371,7 @@ function cleanupMinds() {
   }
   // leftover mind spirits and memories with no diver
   try {
-    const end = world.getDimension(MIND.dim);
+    const end = mindDim();
     for (const e of end.getEntities({ tags: [SPIRIT_TAG] })) {
       if (![...dives.values()].some((d) => d.spiritId === e.id)) e.remove();
     }
@@ -2350,7 +2398,8 @@ function cleanupGraves() {
 
 system.runInterval(() => {
   const tick = now();
-  const list = ghosts();
+  let list;
+  try { list = ghosts(); } catch { return; } // world not ready yet
   for (const p of list) {
     try { ghostTick(p, tick); } catch { /* keep the loop alive */ }
   }

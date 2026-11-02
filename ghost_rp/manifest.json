@@ -1,18 +1,18 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Ghost Mod V3.1: Mind Dive (Resources)",
+    "name": "Ghost Mod V3.2: Mind Dive (Resources)",
     "description": "Black & white ghosts with bright white glowing eyes, possessed mobs with glowing eyes, corpses, mind-realm memories and gravestones.",
     "uuid": "05d5c357-bcd2-4d49-b584-1bc5e6dfe75d",
     "version": [
       3,
-      1,
+      2,
       0
     ],
     "min_engine_version": [
       1,
       26,
-      0
+      30
     ]
   },
   "modules": [
@@ -21,7 +21,7 @@
       "uuid": "109e438d-dbd2-4e1d-b887-ce5e741fa2e9",
       "version": [
         3,
-        1,
+        2,
         0
       ]
     }

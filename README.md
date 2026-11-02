@@ -1,13 +1,15 @@
-# 👻 Ghost Mod V3.1: Mind Dive — a Minecraft Bedrock add-on
+# 👻 Ghost Mod V3.2: Mind Dive — a Minecraft Bedrock add-on
 
 When you die, you come back as a **see-through black-and-white ghost with bright white glowing eyes**. Ghosts haunt the living and take over mobs:
 
 - 🧟 **Corpses** (mobs that just died) can be possessed **instantly**. Tap the corpse and you're inside it.
-- 🧠 **Living mobs** have to be conquered from the inside. **Dive into the mob's brain**, which pulls you into **another dimension**, and beat its **mind trial**. Win, and you wake up inside its body.
+- 🧠 **Living mobs** have to be conquered from the inside. **Dive into the mob's brain**, which pulls you into **the Mind Realm**, the add-on's **own dimension**, and beat its **mind trial**. Win, and you wake up inside its body.
 
 It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation and Switch. Everything is **tap to use**, so you don't need a keyboard.
 
-> **New in V3.1:**
+> **New in V3.2:** minds now open in **the Mind Realm**, a dimension of their own. They're no longer in The End, so **no more endermen** wander in. Nothing spawns in the Mind Realm except what the trial puts there.
+>
+> **V3.1** added:
 > - 🎬 **Cinematic possession animations.**
 > - 🧠 **Every mind looks like its mob.** You're inside a **giant copy of the mob's own head**, built block by block from its real face.
 >
@@ -17,15 +19,15 @@ It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation
 
 ## 📱 Install on your phone
 
-1. Download **[`dist/GhostModV3.1.mcaddon`](dist/GhostModV3.1.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
+1. Download **[`dist/GhostModV3.2.mcaddon`](dist/GhostModV3.2.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
 2. Open it:
    - **Android:** tap the file and choose **Minecraft**.
    - **iPhone/iPad:** open the **Files** app, tap the file, then tap **Share → Minecraft**.
-3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V3.1: Mind Dive (Behavior)**. The resource pack is turned on automatically.
-4. **V3.1 is an update to V3.** If the world still lists the old V3 (or an older Ghost Mod), remove it and add V3.1. Only one version should be active at a time.
+3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V3.2: Mind Dive (Behavior)**. The resource pack is turned on automatically.
+4. **V3.2 is an update to V3 / V3.1.** If the world still lists an older Ghost Mod, remove it and add V3.2. Only one version should be active at a time.
 5. Play. You **don't** need any experimental toggles.
 
-You need **Minecraft 1.26 or newer**, the current version.
+You need **Minecraft 1.26.30 or newer** (any version from June 2026 on). That's the first version that lets add-ons create their own dimension.
 
 ---
 
@@ -63,7 +65,7 @@ You can't move during the animations (2 to 3 seconds). Control comes back automa
 ## 🧠 Mind Dive: getting through a mob's brain
 
 1. Hit a living mob with the **Mind Dive**.
-2. The mob freezes in a trance (`Entranced Zombie`), and the **Mind Breach** animation pulls you into **The End**.
+2. The mob freezes in a trance (`Entranced Zombie`), and the **Mind Breach** animation pulls you through a dimension loading screen into **the Mind Realm**. This empty void dimension belongs to the add-on, and nothing spawns there.
 3. Its mind is **a giant hollow copy of its own head**, 32 blocks across. Every wall, the floor and the ceiling are its real face and skin, turned into pixel art made of the closest-coloured blocks:
    - **Zombie:** a huge green face with dark eyes.
    - **Creeper:** its famous face.
@@ -146,14 +148,16 @@ tools/generate_textures.py      regenerates the pixel-art textures (needs Pillow
 tools/build.py                  packages dist/GhostModV3.1.mcaddon and the separate .mcpack files
 ```
 
-- **Mind realm:** each dive gets its own arena slot far out in The End (x=40000+, y=200).
+- **Mind Realm:** a custom dimension (`ghost:mind_realm`) registered in `system.beforeEvents.startup` with `dimensionRegistry.registerCustomDimension`. It's a stable API since `@minecraft/server` 2.8.0.
+  - The dimension uses the void generator, and each dive gets its own arena slot.
+  - An `entitySpawn` guard removes any mob that appears there except the trial's spirit, its summons and the memories. If a game can't create the dimension, minds fall back to The End.
   - The arena is built with `Dimension.fillBlocks` once its chunks have loaded.
   - The mind is a 32-block room whose six faces are the mob's head faces. `generate_minds.py` reads the head cube's UVs from the vanilla model, crops the face pixels from the vanilla texture, and maps them to the nearest block colour. Glowing blocks are used for bright eyes.
   - Camera animations use the `minecraft:free` camera preset with easing, `camera.fade`, `/camerashake`, and a movement input lock.
   - It's torn down when you leave.
   - While the player is away, the real mob is held in a trance: a name tag keeps it from despawning, and resistance and slowness keep it in place. Winning replaces it with a possessable body.
 - **Ghost look:** Invisibility plus a locked **Ghost Shroud** attachable, with a second emissive **eye layer** (vanilla `breeze_eyes` material with `ignore_lighting`).
-- Uses only the **stable** Script API (`@minecraft/server` 1.19.0), so no experiments are needed.
+- Uses only the **stable** Script API (`@minecraft/server` 2.8.0), so no experiments are needed.
 
 Rebuild after you make changes:
 
