@@ -1,4 +1,4 @@
-# 👻 Ghost Mod V4: Mind Realm — a Minecraft Bedrock add-on
+# 👻 Ghost Mod V5: Every Mind — a Minecraft Bedrock add-on
 
 When you die, you come back as a **see-through black-and-white ghost with bright white glowing eyes**. Ghosts haunt the living and take over mobs:
 
@@ -7,7 +7,13 @@ When you die, you come back as a **see-through black-and-white ghost with bright
 
 It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation and Switch. Everything is **tap to use**, so you don't need a keyboard.
 
-> **New in V4: Mind Realm:** minds now open in **the Mind Realm**, a dimension of their own. They're no longer in The End, so **no more endermen** wander in. Nothing spawns in the Mind Realm except what the trial puts there.
+> **New in V5: Every Mind:**
+> - **Possess almost every mob in the game: 87 of them.** Horses, cats, axolotls, pandas, fish, the warden, the Wither, and more. The full list is below.
+> - **Inside a mind you can jump 2 blocks high**, and every raised ledge in the Memory Hunt has proper steps, so no trial is impossible any more.
+> - **Fixed:** the blaze and ghast powers now work. Minecraft doesn't let add-ons spawn fireballs, so they now fire as instant fire bolts and explosions where you aim.
+> - Lots of new powers: Gallop, Spit, Ink Cloud, Shell Up, Rage, Sonic Boom, Wither Skull, Guardian Beam, Levitation Bolt and more.
+>
+> **V4** moved minds into **the Mind Realm**, a dimension of their own. They're no longer in The End, so **no more endermen** wander in. Nothing spawns in the Mind Realm except what the trial puts there.
 >
 > **V3.1** added:
 > - 🎬 **Cinematic possession animations.**
@@ -19,12 +25,12 @@ It works on **phones and tablets (Android and iOS)**, Windows, Xbox, PlayStation
 
 ## 📱 Install on your phone
 
-1. Download **[`dist/GhostModV4.mcaddon`](dist/GhostModV4.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
+1. Download **[`dist/GhostModV5.mcaddon`](dist/GhostModV5.mcaddon)** (tap the file on GitHub, then tap **Download raw file**).
 2. Open it:
    - **Android:** tap the file and choose **Minecraft**.
    - **iPhone/iPad:** open the **Files** app, tap the file, then tap **Share → Minecraft**.
-3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V4: Mind Realm (Behavior)**. The resource pack is turned on automatically.
-4. **V4 updates V3 / V3.1 / V3.2 in place**, so ghosts, graves and corpses carry over. If the world still lists an older Ghost Mod, remove it and add V4. Only one version should be active at a time.
+3. Edit your world. Under **Behavior Packs**, activate **Ghost Mod V5: Every Mind (Behavior)**. The resource pack is turned on automatically.
+4. **V5 updates V3 and V4 in place**, so ghosts, graves and corpses carry over. If the world still lists an older Ghost Mod, remove it and add V5. Only one version should be active at a time.
 5. Play. You **don't** need any experimental toggles.
 
 You need **Minecraft 1.26.30 or newer** (any version from June 2026 on). That's the first version that lets add-ons create their own dimension.
@@ -74,19 +80,21 @@ You can't move during the animations (2 to 3 seconds). Control comes back automa
    - **Spider:** glowing red eyes.
 
    Bright eyes are built from glowing blocks, so they light up the mind. The trial's platforms and walls use the mob's own colours, and its sounds echo around the head.
-4. Inside the mind you look like **your living self**.
+4. Inside the mind you look like **your living self**, light as a thought: **you can jump 2 blocks high**.
 4. **Beat the trial in time.** You wake up back in the overworld, **inside the mob's body**, and its eyes glow white.
 5. **Fail** (or tap **Escape Mind**) and you're **expelled**. The mob wakes up and its mind stays **guarded** for 60 seconds.
 6. If someone **kills the body** while you're in its mind, you return and its **corpse** is waiting for you to possess.
 
 ### The four mind trials
 
-| Trial | Mobs | What you do |
+| Trial | Mostly for | What you do |
 |---|---|---|
-| ⚔️ **Spirit Duel** | Zombie, Husk, Skeleton, Stray, Wither Skeleton, Spider, Cave Spider, Witch, Evoker, Iron Golem, Wolf, Polar Bear | Fight the mob's **empowered Spirit**, which waits in front of its own giant face, using your Spirit Reaper. Each hit it lands costs a bar of **Mind**, and losing all 6 gets you expelled. Neutral spirits (wolf, golem, bear) only fight back once you strike first |
-| 🏃 **Mind Parkour** | Creeper, Blaze, Ghast, Phantom, Bee, Bat, Rabbit, Goat | Climb a **spiral of floating thoughts** up the inside of its head to the glowing **Brain Core**. Don't touch the floor of its mind: you get 3 tries. There's a glowing checkpoint halfway |
-| 🌀 **Thought Maze** | Enderman, Villager, Fox, Pig | A randomly generated maze. Find the **Brain Core** before time runs out (your HUD shows which way to go) |
-| ✨ **Memory Hunt** | Cow, Sheep, Chicken | Catch all **6 glowing memories**, some on raised ledges, before they fade |
+| ⚔️ **Spirit Duel** | Monsters and fighters: zombies, skeletons, spiders, the warden, the ravager, pillagers and more | Fight the mob's **empowered Spirit**, which waits in front of its own giant face, using your Spirit Reaper. Each hit it lands costs a bar of **Mind**, and losing all 6 gets you expelled. Neutral spirits (wolf, golem, bear) only fight back once you strike first |
+| 🏃 **Mind Parkour** | Flyers and jumpers: blaze, ghast, phantom, Wither, parrot, bee, rabbit, goat, creeper | Climb a **spiral of floating thoughts** up the inside of its head to the glowing **Brain Core**. Don't touch the floor of its mind: you get 3 tries. There's a glowing checkpoint halfway |
+| 🌀 **Thought Maze** | Clever and odd minds: enderman, villagers, piglins, horses, llamas, the creaking, and many animals | A randomly generated maze. Find the **Brain Core** before time runs out (your HUD shows which way to go) |
+| ✨ **Memory Hunt** | Fish, squids and other sea creatures, plus farm animals like cows, sheep and chickens | Catch all **6 glowing memories**, some on raised ledges with steps up to them, before they fade |
+
+Each mob's trial is listed in the [table of every possessable mob](#-possessing-a-body).
 
 Every mind is generated fresh, so no two dives are the same.
 
@@ -94,7 +102,7 @@ Every mind is generated fresh, so no two dives are the same.
 
 ## 🧟 Possessing a body
 
-Mobs that die near a ghost leave a **corpse** lying on the ground (`Corpse of Zombie`). **Tap it** to possess it instantly, with no mind trial needed.
+Almost every mob (87 kinds) leaves a **corpse** when it dies near a ghost. The corpse lies on the ground (`Corpse of Zombie`). **Tap it** to possess it instantly, with no mind trial needed.
 
 Inside a body:
 
@@ -104,20 +112,97 @@ Inside a body:
 - Leave with **Leave Body** (slot 2) or the **dismount/sneak** button. The body becomes a corpse you can re-enter later.
 - If the body dies, you pop back out as a ghost.
 
-| Body | Power | Body | Power |
-|---|---|---|---|
-| Zombie | Undead Roar | Phantom | Swoop (flies) |
-| Husk | Sandstorm | Evoker | Fang Line |
-| Skeleton | Bone Volley | Iron Golem | Ground Slam |
-| Stray | Frost Volley | Wolf / Fox | Pounce |
-| Wither Skeleton | Wither Slash | Pig | Truffle Sniff |
-| Creeper | Detonate | Cow | Stampede |
-| Spider / Cave Spider | Web Shot / Venom Pounce (climbs walls) | Sheep | Wool Cloud |
-| Enderman | Ender Blink | Chicken | Egg Barrage (glides) |
-| Blaze | Fireball Barrage (flies) | Rabbit / Goat | Super Hop / Ram |
-| Ghast | Explosive Fireball (flies) | Polar Bear | Maul |
-| Witch | Hex | Bee / Bat | Sting / Echolocation (fly) |
-| Villager | Ambush (disguise, triple damage) | | |
+**Every mob you can possess (87):**
+
+| Mob | Power | Mind trial |
+|---|---|---|
+| Allay | Echo (flies) | 🏃 Mind Parkour |
+| Armadillo | Shell Up | ✨ Memory Hunt |
+| Axolotl | Shell Up | 🌀 Thought Maze |
+| Bat | Echolocation (flies) | 🏃 Mind Parkour |
+| Bee | Sting (flies) | 🏃 Mind Parkour |
+| Blaze | Fire Bolts (flies) | 🏃 Mind Parkour |
+| Bogged | Venom Volley | ⚔️ Spirit Duel |
+| Breeze | Wind Burst | ⚔️ Spirit Duel |
+| Camel | Gallop | ✨ Memory Hunt |
+| Camel Husk | Gallop | 🌀 Thought Maze |
+| Cat | Pounce | ✨ Memory Hunt |
+| Cave Spider | Venom Pounce (climbs walls) | ⚔️ Spirit Duel |
+| Chicken | Egg Barrage (glides) | ✨ Memory Hunt |
+| Cod | Dart (swims) | ✨ Memory Hunt |
+| Copper Golem | Sniff | 🌀 Thought Maze |
+| Cow | Stampede | ✨ Memory Hunt |
+| Creaking | Roar | 🌀 Thought Maze |
+| Creeper | Detonate | 🏃 Mind Parkour |
+| Dolphin | Dart (swims) | ✨ Memory Hunt |
+| Donkey | Gallop | 🌀 Thought Maze |
+| Drowned | Trident Throw | ⚔️ Spirit Duel |
+| Elder Guardian | Guardian Beam (swims) | ✨ Memory Hunt |
+| Enderman | Ender Blink | 🌀 Thought Maze |
+| Endermite | Pounce | ⚔️ Spirit Duel |
+| Evoker | Fang Line | ⚔️ Spirit Duel |
+| Fox | Pounce | 🌀 Thought Maze |
+| Frog | Super Hop | 🌀 Thought Maze |
+| Ghast | Explosive Fireball (flies) | 🏃 Mind Parkour |
+| Glow Squid | Ink Cloud (swims) | ✨ Memory Hunt |
+| Goat | Ram | 🏃 Mind Parkour |
+| Guardian | Guardian Beam (swims) | ✨ Memory Hunt |
+| Happy Ghast | Snowball Barrage (flies) | 🏃 Mind Parkour |
+| Hoglin | Ram (flies) | 🌀 Thought Maze |
+| Horse | Gallop | ✨ Memory Hunt |
+| Husk | Sandstorm | ⚔️ Spirit Duel |
+| Iron Golem | Ground Slam | ⚔️ Spirit Duel |
+| Llama | Spit | 🌀 Thought Maze |
+| Magma Cube | Ground Slam | ⚔️ Spirit Duel |
+| Mooshroom | Stampede | 🌀 Thought Maze |
+| Mule | Gallop | ✨ Memory Hunt |
+| Nautilus | Shell Up (swims) | ✨ Memory Hunt |
+| Ocelot | Pounce | ✨ Memory Hunt |
+| Panda | Stampede | 🌀 Thought Maze |
+| Parched | Arrow Volley | ⚔️ Spirit Duel |
+| Parrot | Echo (flies) | 🏃 Mind Parkour |
+| Phantom | Swoop (flies) | 🏃 Mind Parkour |
+| Pig | Truffle Sniff | 🌀 Thought Maze |
+| Piglin | Rage | 🌀 Thought Maze |
+| Piglin Brute | Rage | 🌀 Thought Maze |
+| Pillager | Arrow Volley | ⚔️ Spirit Duel |
+| Polar Bear | Maul | ⚔️ Spirit Duel |
+| Pufferfish | Puff Up (swims) | ✨ Memory Hunt |
+| Rabbit | Super Hop | 🏃 Mind Parkour |
+| Ravager | Ground Slam | ⚔️ Spirit Duel |
+| Salmon | Dart (swims) | ✨ Memory Hunt |
+| Sheep | Wool Cloud | ✨ Memory Hunt |
+| Shulker | Levitation Bolt | 🌀 Thought Maze |
+| Silverfish | Pounce | ⚔️ Spirit Duel |
+| Skeleton | Bone Volley | ⚔️ Spirit Duel |
+| Skeleton Horse | Gallop | ✨ Memory Hunt |
+| Slime | Ground Slam | ⚔️ Spirit Duel |
+| Sniffer | Sniff | ✨ Memory Hunt |
+| Snow Golem | Snowball Barrage | ✨ Memory Hunt |
+| Spider | Web Shot (climbs walls) | ⚔️ Spirit Duel |
+| Squid | Ink Cloud (swims) | ✨ Memory Hunt |
+| Stray | Frost Volley | ⚔️ Spirit Duel |
+| Strider | Gallop | 🌀 Thought Maze |
+| Sulfur Cube | Ground Slam | ✨ Memory Hunt |
+| Tadpole | Ink Cloud (swims) | ✨ Memory Hunt |
+| Trader Llama | Spit | ✨ Memory Hunt |
+| Tropical Fish | Dart (swims) | ✨ Memory Hunt |
+| Turtle | Shell Up | ✨ Memory Hunt |
+| Vex | Dart (flies) | 🏃 Mind Parkour |
+| Villager | Ambush | 🌀 Thought Maze |
+| Vindicator | Axe Fury | ⚔️ Spirit Duel |
+| Wandering Trader | Ambush | 🌀 Thought Maze |
+| Warden | Sonic Boom | ⚔️ Spirit Duel |
+| Witch | Hex | ⚔️ Spirit Duel |
+| Wither | Wither Skull (flies) | 🏃 Mind Parkour |
+| Wither Skeleton | Wither Slash | ⚔️ Spirit Duel |
+| Wolf | Pounce | ⚔️ Spirit Duel |
+| Zoglin | Ram (flies) | ⚔️ Spirit Duel |
+| Zombie | Undead Roar | ⚔️ Spirit Duel |
+| Zombie Horse | Gallop | 🌀 Thought Maze |
+| Zombie Nautilus | Shell Up (swims) | ✨ Memory Hunt |
+| Zombie Villager | Roar | 🌀 Thought Maze |
+| Zombified Piglin | Rage | ⚔️ Spirit Duel |
 
 ---
 
@@ -142,10 +227,10 @@ To change the settings, edit the `CFG`, `MIND` and `TRIALS` blocks at the top of
 ```
 ghost_bp/                       behavior pack: script, items, entities (+ entities/vessels/ = possessable bodies)
 ghost_rp/                       resource pack: shroud and glowing eyes, bodies, memory orbs, gravestone
-tools/generate_vessels.py       builds the 27 possessable bodies from Mojang's official vanilla packs
+tools/generate_vessels.py       builds all 87 possessable bodies from Mojang's official vanilla packs: 27 hand-tuned, the rest configured automatically (scripts/bodies_auto.js)
 tools/generate_minds.py         turns each mob's real head texture into block pixel art (ghost_bp/scripts/mind_heads.js)
 tools/generate_textures.py      regenerates the pixel-art textures (needs Pillow)
-tools/build.py                  packages dist/GhostModV4.mcaddon and the separate .mcpack files
+tools/build.py                  packages dist/GhostModV5.mcaddon and the separate .mcpack files
 ```
 
 - **Mind Realm:** a custom dimension (`ghost:mind_realm`) registered in `system.beforeEvents.startup` with `dimensionRegistry.registerCustomDimension`. It's a stable API since `@minecraft/server` 2.8.0.

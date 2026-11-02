@@ -1,0 +1,71 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_panda",
+   "materials": {
+    "default": "panda",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/panda/panda",
+    "lazy": "textures/entity/panda/panda_lazy",
+    "worried": "textures/entity/panda/panda_worried",
+    "playful": "textures/entity/panda/panda_playful",
+    "brown": "textures/entity/panda/panda_brown",
+    "weak": "textures/entity/panda/panda_sneezy",
+    "aggressive": "textures/entity/panda/panda_aggressive",
+    "baby_default": "textures/entity/panda/panda_baby",
+    "baby_lazy": "textures/entity/panda/panda_lazy_baby",
+    "baby_worried": "textures/entity/panda/panda_worried_baby",
+    "baby_playful": "textures/entity/panda/panda_playful_baby",
+    "baby_brown": "textures/entity/panda/panda_brown_baby",
+    "baby_weak": "textures/entity/panda/panda_weak_baby",
+    "baby_aggressive": "textures/entity/panda/panda_aggressive_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.panda.default",
+    "baby": "geometry.ghost.panda.baby",
+    "ghost_eyes": "geometry.ghost.panda.eyes"
+   },
+   "animations": {
+    "unhappy": "animation.panda.unhappy",
+    "sneezing": "animation.panda.sneezing",
+    "walk": "animation.quadruped.walk",
+    "look_at_target": "animation.common.look_at_target",
+    "baby_transform": "animation.panda.baby_transform",
+    "sitting": "animation.panda.sitting",
+    "rolling": "animation.panda.rolling",
+    "lying": "animation.panda.lying",
+    "baby_sitting": "animation.panda.baby_sitting",
+    "baby_rolling": "animation.panda.baby_rolling",
+    "baby_lying": "animation.panda.baby_lying",
+    "ghost_corpse": "animation.ghost.corpse.panda"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.panda.move"
+    },
+    {
+     "unhappy": "controller.animation.panda.unhappy"
+    },
+    {
+     "sneezing": "controller.animation.panda.sneezing"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.panda.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "scripts": {
+    "scale": "query.is_baby ? (1 / 0.4) : 1.0"
+   }
+  }
+ }
+}

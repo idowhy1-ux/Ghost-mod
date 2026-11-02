@@ -1,0 +1,66 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.zombie_nautilus.saddle",
+    "texture_width": 128,
+    "texture_height": 128,
+    "visible_bounds_width": 4,
+    "visible_bounds_height": 2.95,
+    "visible_bounds_offset": [
+     0,
+     0.75,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "nautilus",
+     "pivot": [
+      0,
+      -5,
+      -6
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "head",
+     "parent": "nautilus",
+     "pivot": [
+      0,
+      8,
+      -1
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -7,
+        8,
+        -8
+       ],
+       "size": [
+        14,
+        10,
+        16
+       ],
+       "inflate": 0.2,
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

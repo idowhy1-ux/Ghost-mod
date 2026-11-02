@@ -69,8 +69,171 @@ VESSELS = [
     ("villager", "minecraft:villager_v2", "Villager", 20, 0.6, 1.9, 0.1, "ground", False, None, ["villager", "mob"], "side", None),
 ]
 
+# Every other living vanilla mob is configured automatically from Mojang's files.
+EXCLUDE = {"minecraft:armor_stand", "minecraft:npc", "minecraft:tripod_camera", "minecraft:ender_dragon",
+           "minecraft:villager", "minecraft:zombie_villager", "minecraft:agent", "minecraft:player"}
+EXTRA_LIVING = {"minecraft:cod", "minecraft:salmon", "minecraft:pufferfish", "minecraft:tropicalfish", "minecraft:piglin_brute"}
+AUTO_POWER = {
+    "allay": "echo", "armadillo": "shell", "axolotl": "shell", "bogged": "venom_volley", "breeze": "wind",
+    "camel": "gallop", "camel_husk": "gallop", "cat": "pounce", "copper_golem": "sniff", "creaking": "roar",
+    "dolphin": "swoop", "donkey": "gallop", "drowned": "trident", "elder_guardian": "laser", "endermite": "pounce",
+    "frog": "super_hop", "glow_squid": "ink", "guardian": "laser", "happy_ghast": "snowballs", "hoglin": "ram",
+    "horse": "gallop", "llama": "spit", "magma_cube": "slam", "mooshroom": "stampede", "mule": "gallop",
+    "nautilus": "shell", "ocelot": "pounce", "panda": "stampede", "parched": "volley", "parrot": "echo",
+    "piglin": "rage", "piglin_brute": "rage", "pillager": "volley", "ravager": "slam", "shulker": "bullet",
+    "silverfish": "pounce", "skeleton_horse": "gallop", "slime": "slam", "sniffer": "sniff", "snow_golem": "snowballs",
+    "squid": "ink", "strider": "gallop", "sulfur_cube": "slam", "tadpole": "ink", "trader_llama": "spit", "turtle": "shell",
+    "vex": "swoop", "vindicator": "maul", "wandering_trader": "ambush", "warden": "sonic_boom", "wither": "skulls",
+    "zoglin": "ram", "zombie_horse": "gallop", "zombie_nautilus": "shell", "zombie_pigman": "rage", "zombie_villager": "roar",
+    "cod": "swoop", "salmon": "swoop", "tropicalfish": "swoop", "pufferfish": "puff",
+}
+POWER_INFO = {  # power: (name, description, cooldown ticks)
+    "roar": ("Roar", "Slows and weakens everyone nearby", 300),
+    "pounce": ("Pounce", "Leap at your prey", 60),
+    "swoop": ("Dart", "Dash forward and strike", 80),
+    "stampede": ("Stampede", "Charge forward, trampling everything", 140),
+    "sniff": ("Sniff", "Sniff out players, corpses and minds nearby", 120),
+    "echo": ("Echo", "Reveal everything around you", 120),
+    "super_hop": ("Super Hop", "An enormous leap", 30),
+    "ram": ("Ram", "Charge and send everything flying", 100),
+    "slam": ("Ground Slam", "Smash the ground and launch everyone nearby", 160),
+    "maul": ("Axe Fury", "A savage swipe at everything in front", 120),
+    "volley": ("Arrow Volley", "Fire three arrows", 40),
+    "venom_volley": ("Venom Volley", "Fire three poisoned arrows", 50),
+    "ambush": ("Ambush", "Look harmless... your next hit deals triple damage", 300),
+    "shell": ("Shell Up", "Become nearly invulnerable for a few seconds", 300),
+    "wind": ("Wind Burst", "Launch a wind charge and leap into the air", 60),
+    "gallop": ("Gallop", "A burst of incredible speed", 160),
+    "trident": ("Trident Throw", "Hurl a heavy trident", 60),
+    "laser": ("Guardian Beam", "Lock on and blast a target with a laser", 120),
+    "spit": ("Spit", "Spit at a target, slowing it down", 40),
+    "rage": ("Rage", "Double damage and speed for 10 seconds", 300),
+    "bullet": ("Levitation Bolt", "Send everything in front floating into the air", 120),
+    "snowballs": ("Snowball Barrage", "Throw three snowballs", 30),
+    "sonic_boom": ("Sonic Boom", "A devastating blast that passes through walls", 200),
+    "skulls": ("Wither Skull", "Blast your target with an exploding skull", 60),
+    "ink": ("Ink Cloud", "Blind everyone around you", 160),
+    "puff": ("Puff Up", "Poison everyone who gets too close", 160),
+}
+TRIAL_OVERRIDE = {"piglin": "maze", "piglin_brute": "maze", "hoglin": "maze", "creaking": "maze", "zombie_villager": "maze",
+                  "snow_golem": "memories", "copper_golem": "maze", "wandering_trader": "maze", "shulker": "maze"}
+KIND_OVERRIDE = {"axolotl": "ground", "turtle": "ground", "frog": "ground", "drowned": "ground", "strider": "ground",
+                 "elder_guardian": "swim", "guardian": "swim", "glow_squid": "swim", "squid": "swim", "dolphin": "swim",
+                 "tadpole": "swim", "nautilus": "swim", "zombie_nautilus": "swim", "cod": "swim", "salmon": "swim",
+                 "pufferfish": "swim", "tropicalfish": "swim", "allay": "fly", "parrot": "fly", "vex": "fly",
+                 "wither": "fly", "happy_ghast": "fly", "breeze": "ground", "shulker": "ground"}
+SPEED_OVERRIDE = {"horse": 0.2, "donkey": 0.17, "mule": 0.17, "skeleton_horse": 0.2, "zombie_horse": 0.18,
+                  "camel": 0.16, "camel_husk": 0.16, "strider": 0.13, "warden": 0.1, "ravager": 0.12}
+JUMP = {"frog": 0.7, "slime": 0.6, "magma_cube": 0.65, "sulfur_cube": 0.6, "horse": 0.6, "donkey": 0.55, "mule": 0.55,
+        "skeleton_horse": 0.6, "zombie_horse": 0.6, "camel": 0.5, "camel_husk": 0.5, "cat": 0.5, "ocelot": 0.5,
+        "llama": 0.5, "trader_llama": 0.5, "breeze": 0.7}
+SCALE_OVERRIDE = {"slime": 2, "magma_cube": 2, "sulfur_cube": 2}
+BOX_OVERRIDE = {"slime": (1.04, 1.04), "magma_cube": (1.04, 1.04), "sulfur_cube": (1.04, 1.04), "shulker": (1.0, 1.0)}
+
+
+def _num(v, default):
+    if isinstance(v, bool):
+        return default
+    if isinstance(v, (int, float)):
+        return v
+    if isinstance(v, dict):
+        if "range_max" in v:
+            return (v.get("range_min", v["range_max"]) + v["range_max"]) / 2
+        for k in ("value", "max"):
+            if k in v:
+                return _num(v[k], default)
+    return default
+
+
+def component(e, name):
+    """A component as an adult of the mob has it: adult groups first, then base components, then other groups."""
+    groups = e.get("component_groups", {})
+    is_baby = lambda g: any(w in g for w in ("baby", "child"))
+    for gname, g in groups.items():
+        if "adult" in gname and not is_baby(gname) and name in g:
+            return g[name]
+    comps = e.get("components", {})
+    if name in comps:
+        return comps[name]
+    for gname, g in groups.items():
+        if not is_baby(gname) and name in g:
+            return g[name]
+    return None
+
+
+def auto_vessels(van):
+    """(vessel tuple, script body entry) for every living vanilla mob that isn't hand-tuned above."""
+    curated = {v[1] for v in VESSELS}
+    out = []
+    for vid in sorted(van.entities):
+        e = van.bp.get(vid)
+        if vid in curated or vid in EXCLUDE or not e:
+            continue
+        fams = list((e.get("components", {}).get("minecraft:type_family") or {}).get("family", []))
+        for gname, g in e.get("component_groups", {}).items():   # plus whatever the adult form adds
+            if not any(w in gname for w in ("baby", "child")):
+                fams += [f for f in (g.get("minecraft:type_family") or {}).get("family", []) if f not in fams]
+        if "mob" not in fams and vid not in EXTRA_LIVING:
+            continue
+        short = vid.split(":")[1]
+        key = short.replace("_v2", "")
+        name = van.lang.get(f"entity.{short}.name") or key.replace("_", " ").title()
+        hp = max(8, int(round(_num((component(e, "minecraft:health") or {}).get("value"), 20))))
+        box = component(e, "minecraft:collision_box") or {}
+        w, h = BOX_OVERRIDE.get(key, (_num(box.get("width"), 0.6), _num(box.get("height"), 1.8)))
+        scale = SCALE_OVERRIDE.get(key) or _num((e.get("components", {}).get("minecraft:scale") or {}).get("value"), None)
+        fire = "minecraft:fire_immune" in e.get("components", {})
+        kind = KIND_OVERRIDE.get(key)
+        if not kind:
+            if any(component(e, c) is not None for c in ("minecraft:can_fly", "minecraft:navigation.fly", "minecraft:navigation.hover")):
+                kind = "fly"
+            else:
+                kind = "ground"  # (vanilla "can_climb" only means ladders - only spiders climb walls)
+        mv = _num((component(e, "minecraft:movement") or {}).get("value"), 0.25)
+        speed = SPEED_OVERRIDE.get(key) or (0.04 if kind in ("fly", "swim") else round(min(0.17, max(0.07, mv * 0.45)), 3))
+        pose = "flip" if kind in ("fly", "swim", "climb") else "side"
+        vessel = (key, vid, name, hp, round(w, 2), round(h, 2), speed, "fly" if kind == "swim" else kind, fire,
+                  scale, [f for f in fams if f != "ghost_vessel"] or [key, "mob"], pose, None)
+
+        power = AUTO_POWER.get(key, "pounce")
+        pname, pdesc, cd = POWER_INFO[power]
+        melee = max(1, int(round(_num((component(e, "minecraft:attack") or {}).get("damage"), 2))))
+        summonable = bool(e.get("description", {}).get("is_summonable"))
+        if key in TRIAL_OVERRIDE:
+            trial = TRIAL_OVERRIDE[key]
+        elif kind == "fly":
+            trial = "parkour"
+        elif kind == "swim":
+            trial = "memories"
+        elif "monster" in fams and summonable:
+            trial = "duel"
+        else:
+            trial = "maze" if len(out) % 2 == 0 else "memories"
+        snd = van.sounds.get(short) or {}
+        ev = dict(snd.get("events", {}))
+        ev.update(snd.get("variants", {}).get("map", {}).get("default", {}).get("events", {}))
+        sound = next((x if isinstance(x, str) else x.get("sound") for x in (ev.get("ambient"), ev.get("hurt")) if x), None)
+        body = {"name": name, "melee": melee, "power": power, "powerName": pname, "cd": cd,
+                "desc": pdesc + (". You can fly!" if kind == "fly" else ". You can swim through the air!" if kind == "swim" else ""),
+                "trial": trial}
+        if sound and sound != "missing.legacyref":
+            body["sound"] = sound
+        if kind in ("fly", "swim"):
+            body["fly"] = 0.3 if kind == "fly" else 0.24
+        if kind == "climb":
+            body["climb"] = True
+        if key in JUMP:
+            body["jump"] = JUMP[key]
+        out.append((vessel, body))
+    return out
+
+
+def all_vessels(van):
+    return list(VESSELS) + [v for v, _ in auto_vessels(van)]
+
+
 STATIC_LANG = [
-    "pack.name=Ghost Mod V4: Mind Realm",
+    "pack.name=Ghost Mod V5: Every Mind",
     "pack.description=Become a ghost, possess the dead, invade the minds of the living.",
     "entity.ghost:memory.name=Memory",
     "entity.ghost:gravestone.name=Gravestone",
@@ -116,7 +279,9 @@ def ensure_samples(path):
         subprocess.check_call(["git", "-C", CACHE, "sparse-checkout", "set", "--no-cone",
                                "/resource_pack/entity/", "/resource_pack/models/",
                                "/resource_pack/render_controllers/", "/resource_pack/animations/",
-                               "/resource_pack/animation_controllers/", "/resource_pack/sounds.json"])
+                               "/resource_pack/animation_controllers/", "/resource_pack/sounds.json",
+                               "/resource_pack/texts/", "/resource_pack/textures/entity/",
+                               "/resource_pack/textures/blocks/", "/behavior_pack/entities/"])
     return CACHE
 
 
@@ -149,6 +314,21 @@ class Vanilla:
             for f in glob.glob(os.path.join(rp, pat, "*.json")):
                 store.update(load(f).get(key, {}))
         self.sounds = load(os.path.join(rp, "sounds.json"))["entity_sounds"]["entities"]
+        self.bp = {}
+        for f in glob.glob(os.path.join(root, "behavior_pack", "entities", "*.json")):
+            try:
+                e = load(f)["minecraft:entity"]
+                self.bp[e["description"]["identifier"]] = e
+            except Exception:
+                pass
+        self.lang = {}
+        lang_path = os.path.join(rp, "texts", "en_US.lang")
+        if os.path.exists(lang_path):
+            with open(lang_path, encoding="utf-8") as f:
+                for line in f:
+                    k, sep, v = line.partition("=")
+                    if sep:
+                        self.lang[k.strip()] = v.split("\t")[0].split("#")[0].strip()
 
     def resolve_geo(self, gid):
         kind, fv, g, parent = self.geo[gid]
@@ -218,8 +398,9 @@ def eyes_geometry(kind, g, prefer):
         if n in by_name:
             head = by_name[n]
             break
-    if head is None:
-        raise RuntimeError("no head bone")
+    if head is None:  # no head bone: put the eyes on the model's biggest part
+        head = max((b for b in bones if b.get("cubes")),
+                   key=lambda b: max(c["size"][0] * c["size"][1] * c["size"][2] for c in b["cubes"]))
 
     def descendants(name):
         out = [by_name[name]]
@@ -291,7 +472,13 @@ def main():
     sounds = {}
     lang = []
 
-    for (key, vid, name, hp, w, h, speed, kind, fire, scale, fams, pose, eye_bone) in VESSELS:
+    autos = auto_vessels(van)
+    with open(os.path.join(BP, "scripts", "bodies_auto.js"), "w") as f:
+        f.write("// Generated by tools/generate_vessels.py - every possessable mob that is configured automatically.\n")
+        f.write("export const AUTO_BODIES = " + json.dumps({v[0]: b for v, b in autos}, indent=1) + ";\n")
+        f.write("export const AUTO_MOBS = " + json.dumps({v[1]: v[0] for v, _ in autos}, indent=1) + ";\n")
+
+    for (key, vid, name, hp, w, h, speed, kind, fire, scale, fams, pose, eye_bone) in all_vessels(van):
         ident = f"ghost:vessel_{key}"
         fmt, src = van.entities[vid]
         desc = copy.deepcopy(src["minecraft:client_entity"]["description"])
@@ -301,6 +488,7 @@ def main():
 
         # models: copy every referenced geometry, add a ghost_root bone
         default_geo = None
+        default_key = "default" if "default" in desc["geometry"] else next(iter(desc["geometry"]))
         for gk, gid in list(desc["geometry"].items()):
             gkind, gfv, g = van.resolve_geo(gid)
             bones = g["bones"]
@@ -309,7 +497,7 @@ def main():
             new_id = f"geometry.ghost.{key}.{gk}"
             write_geo(gkind, gfv, new_id, g, os.path.join(RP, "models", "entity", "vessels", f"{key}.{gk}.geo.json"))
             desc["geometry"][gk] = new_id
-            if gk == "default":
+            if gk == default_key:
                 default_geo = (gkind, gfv, g)
 
         gkind, gfv, g = default_geo
@@ -402,7 +590,7 @@ def main():
         json.dump({"entity_sounds": {"entities": sounds}}, f, indent=1)
     with open(os.path.join(RP, "texts", "en_US.lang"), "w") as f:
         f.write("\n".join(STATIC_LANG + lang) + "\n")
-    print(f"Generated {len(VESSELS)} vessels.")
+    print(f"Generated {len(VESSELS) + len(autos)} vessels ({len(autos)} configured automatically).")
 
 
 def behavior(ident, hp, w, h, speed, kind, fire, scale, fams):

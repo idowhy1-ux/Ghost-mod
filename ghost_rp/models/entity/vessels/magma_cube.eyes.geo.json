@@ -1,0 +1,76 @@
+{
+ "format_version": "1.8.0",
+ "geometry.ghost.magma_cube.eyes": {
+  "texturewidth": 16,
+  "textureheight": 16,
+  "visible_bounds_width": 6,
+  "visible_bounds_height": 6,
+  "visible_bounds_offset": [
+   0,
+   1.5,
+   0
+  ],
+  "bones": [
+   {
+    "name": "ghost_root",
+    "pivot": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "name": "insideCube",
+    "pivot": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "parent": "ghost_root"
+   },
+   {
+    "name": "bodyCube_0",
+    "pivot": [
+     0.0,
+     24.0,
+     0.0
+    ],
+    "parent": "insideCube",
+    "cubes": [
+     {
+      "origin": [
+       -3.0,
+       7.05,
+       -4.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     },
+     {
+      "origin": [
+       1.0,
+       7.05,
+       -4.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,95 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.mule.eyes",
+    "texture_width": 16,
+    "texture_height": 16,
+    "visible_bounds_width": 6,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     1.5,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "Body",
+     "pivot": [
+      0,
+      13,
+      9
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "Neck",
+     "pivot": [
+      0,
+      17,
+      -8
+     ],
+     "parent": "Body",
+     "rotation": [
+      30,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "Head",
+     "pivot": [
+      0,
+      28,
+      -11
+     ],
+     "parent": "Neck",
+     "cubes": [
+      {
+       "origin": [
+        -2.0,
+        30.25,
+        -11.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        1.0,
+        30.25,
+        -11.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

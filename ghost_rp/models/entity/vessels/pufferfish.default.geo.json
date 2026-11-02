@@ -1,0 +1,157 @@
+{
+ "format_version": "1.8.0",
+ "geometry.ghost.pufferfish.default": {
+  "visible_bounds_width": 3.6,
+  "visible_bounds_height": 2.8,
+  "texturewidth": 32,
+  "textureheight": 32,
+  "bones": [
+   {
+    "name": "ghost_root",
+    "pivot": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "name": "body",
+    "cubes": [
+     {
+      "origin": [
+       -1.5,
+       0.0,
+       -1.5
+      ],
+      "size": [
+       3.0,
+       2.0,
+       3.0
+      ],
+      "uv": [
+       0.0,
+       27.0
+      ]
+     },
+     {
+      "origin": [
+       0.5,
+       2.0,
+       -1.5
+      ],
+      "size": [
+       1.0,
+       1.0,
+       1.0
+      ],
+      "uv": [
+       24.0,
+       6.0
+      ]
+     },
+     {
+      "origin": [
+       -1.5,
+       2.0,
+       -1.5
+      ],
+      "size": [
+       1.0,
+       1.0,
+       1.0
+      ],
+      "uv": [
+       28.0,
+       6.0
+      ]
+     }
+    ],
+    "locators": {
+     "lead": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "parent": "ghost_root"
+   },
+   {
+    "name": "tailfin",
+    "parent": "body",
+    "cubes": [
+     {
+      "origin": [
+       -1.5,
+       1.0,
+       1.5
+      ],
+      "size": [
+       3.0,
+       0.0,
+       3.0
+      ],
+      "uv": [
+       -3.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "leftFin",
+    "parent": "body",
+    "pivot": [
+     6.5,
+     5.0,
+     0.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       1.5,
+       0.0,
+       -1.5
+      ],
+      "size": [
+       1.0,
+       1.0,
+       2.0
+      ],
+      "uv": [
+       25.0,
+       0.0
+      ],
+      "mirror": true
+     }
+    ]
+   },
+   {
+    "name": "rightFin",
+    "parent": "body",
+    "pivot": [
+     -6.5,
+     5.0,
+     0.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       0.0,
+       -1.5
+      ],
+      "size": [
+       1.0,
+       1.0,
+       2.0
+      ],
+      "uv": [
+       25.0,
+       0.0
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

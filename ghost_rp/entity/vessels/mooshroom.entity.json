@@ -1,0 +1,51 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_mooshroom",
+   "materials": {
+    "default": "mooshroom",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/cow/mooshroom_v2",
+    "brown": "textures/entity/cow/brown_mooshroom_v2",
+    "baby_default": "textures/entity/cow/mooshroom_red_baby",
+    "baby_brown": "textures/entity/cow/mooshroom_brown_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.mooshroom.default",
+    "baby": "geometry.ghost.mooshroom.baby",
+    "ghost_eyes": "geometry.ghost.mooshroom.eyes"
+   },
+   "animations": {
+    "setup": "animation.mooshroom.setup",
+    "walk": "animation.quadruped.walk",
+    "look_at_target": "animation.common.look_at_target",
+    "baby_transform": "animation.mooshroom.baby_transform",
+    "ghost_corpse": "animation.ghost.corpse.mooshroom"
+   },
+   "animation_controllers": [
+    {
+     "setup": "controller.animation.mooshroom.setup"
+    },
+    {
+     "move": "controller.animation.mooshroom.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.mooshroom.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "scripts": {
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   }
+  }
+ }
+}

@@ -1,0 +1,67 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_strider",
+   "materials": {
+    "default": "strider",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/strider/strider",
+    "saddled": "textures/entity/strider/strider_saddled",
+    "suffocated": "textures/entity/strider/strider_suffocated",
+    "suffocated_saddled": "textures/entity/strider/strider_suffocated_saddled",
+    "baby_default": "textures/entity/strider/strider_baby",
+    "baby_suffocated": "textures/entity/strider/strider_cold_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.strider.default",
+    "baby": "geometry.ghost.strider.baby",
+    "ghost_eyes": "geometry.ghost.strider.eyes"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.animation_speed = Math.min(query.modified_move_speed, 0.25);",
+     "variable.speed = 85.9437;",
+     "variable.bristle_flow=Math.cos(query.modified_distance_moved * variable.speed + 180) * variable.animation_speed;",
+     "variable.bristle_range_mod=1;",
+     "variable.bristle_speed_mod=1;"
+    ],
+    "animate": [
+     "look_at_target",
+     {
+      "walk": "!query.is_baby"
+     },
+     {
+      "walk_baby": "query.is_baby"
+     },
+     {
+      "bristle_flow": "!query.is_baby"
+     },
+     {
+      "bristle_flow_baby": "query.is_baby"
+     },
+     "ghost_corpse_ctrl"
+    ],
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   },
+   "animations": {
+    "look_at_target": "animation.strider.look_at_target.default",
+    "walk": "animation.strider.walk",
+    "bristle_flow": "animation.strider.bristle_flow",
+    "walk_baby": "animation.strider.baby.walk",
+    "bristle_flow_baby": "animation.strider.baby.bristle_flow",
+    "ghost_corpse": "animation.ghost.corpse.strider",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "render_controllers": [
+    "controller.render.strider.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

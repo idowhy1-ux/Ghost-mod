@@ -1,0 +1,86 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.hoglin.eyes",
+    "texture_width": 16,
+    "texture_height": 16,
+    "visible_bounds_width": 6,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     1.5,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "body",
+     "pivot": [
+      0,
+      19,
+      -3
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "head",
+     "pivot": [
+      0,
+      22,
+      -5
+     ],
+     "parent": "body",
+     "rotation": [
+      50,
+      0,
+      0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -5.0,
+        23.8,
+        -24.2
+       ],
+       "size": [
+        3,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        2.0,
+        23.8,
+        -24.2
+       ],
+       "size": [
+        3,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

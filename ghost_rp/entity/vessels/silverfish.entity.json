@@ -1,0 +1,39 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_silverfish",
+   "materials": {
+    "default": "silverfish",
+    "body_layer": "silverfish_layers",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/silverfish",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.silverfish.default",
+    "ghost_eyes": "geometry.ghost.silverfish.eyes"
+   },
+   "animations": {
+    "move": "animation.silverfish.move",
+    "ghost_corpse": "animation.ghost.corpse.silverfish"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.silverfish.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.silverfish",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

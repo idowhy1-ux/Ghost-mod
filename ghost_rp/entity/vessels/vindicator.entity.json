@@ -1,0 +1,62 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_vindicator",
+   "materials": {
+    "default": "vindicator",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/vindicator",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.vindicator.default",
+    "ghost_eyes": "geometry.ghost.vindicator.eyes"
+   },
+   "scripts": {
+    "scale": "0.9375",
+    "animate": [
+     "vindicator_base",
+     "vindicator_walk",
+     "controller_look_at_target",
+     "controller_vindicator_base",
+     "controller_riding",
+     "ghost_corpse_ctrl"
+    ],
+    "pre_animation": [
+     "variable.riding_y_offset_with_respect_to_player = 1.25;",
+     "variable.riding_y_offset_on_vehicle_where_other_entites_can_stand = query.is_riding_any_entity_of_type('minecraft:minecart', 'minecraft:boat', 'minecraft:chest_boat') ? -3.0 : 0.0;",
+     "variable.riding_y_offset = variable.riding_y_offset_with_respect_to_player + variable.riding_y_offset_on_vehicle_where_other_entites_can_stand;"
+    ]
+   },
+   "animations": {
+    "look_at_target_default": "animation.humanoid.look_at_target.default",
+    "look_at_target_gliding": "animation.humanoid.look_at_target.gliding",
+    "look_at_target_swimming": "animation.humanoid.look_at_target.swimming",
+    "riding.arms": "animation.vindicator.riding.arms",
+    "riding.legs": "animation.vindicator.riding.legs",
+    "vindicator_base": "animation.vindicator.base",
+    "vindicator_attack": "animation.vindicator.attack",
+    "vindicator_walk": "animation.vindicator.walk",
+    "celebrating": "animation.humanoid.celebrating",
+    "controller_look_at_target": "controller.animation.humanoid.look_at_target",
+    "controller_vindicator_base": "controller.animation.vindicator.base",
+    "controller_riding": "controller.animation.humanoid.riding",
+    "vindicator_hand_attack": "animation.vindicator.hand_attack",
+    "riding.body": "animation.humanoid.riding.body",
+    "ghost_corpse": "animation.ghost.corpse.vindicator",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "render_controllers": [
+    "controller.render.vindicator",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "enable_attachables": true,
+   "hide_armor": true
+  }
+ }
+}

@@ -1,0 +1,38 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_tadpole",
+   "materials": {
+    "default": "tadpole",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/tadpole/tadpole",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.tadpole.default",
+    "ghost_eyes": "geometry.ghost.tadpole.eyes"
+   },
+   "animations": {
+    "swim": "animation.tadpole.swim",
+    "ghost_corpse": "animation.ghost.corpse.tadpole"
+   },
+   "animation_controllers": [
+    {
+     "general": "controller.animation.tadpole.general"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.tadpole",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,180 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:entity": {
+  "description": {
+   "identifier": "ghost:vessel_horse",
+   "is_spawnable": false,
+   "is_summonable": true,
+   "properties": {
+    "ghost:corpse": {
+     "type": "bool",
+     "default": true,
+     "client_sync": true
+    }
+   }
+  },
+  "component_groups": {
+   "ghost:corpse": {
+    "minecraft:type_family": {
+     "family": [
+      "ghost_corpse",
+      "inanimate"
+     ]
+    },
+    "minecraft:collision_box": {
+     "width": 1.4,
+     "height": 0.6
+    },
+    "minecraft:knockback_resistance": {
+     "value": 1.0
+    },
+    "minecraft:damage_sensor": {
+     "triggers": [
+      {
+       "cause": "all",
+       "deals_damage": "no"
+      }
+     ]
+    },
+    "minecraft:interact": {
+     "interactions": [
+      {
+       "on_interact": {
+        "filters": {
+         "test": "has_tag",
+         "subject": "other",
+         "value": "ghost"
+        }
+       },
+       "interact_text": "action.interact.ghost_possess",
+       "swing": true
+      }
+     ]
+    }
+   },
+   "ghost:possessed": {
+    "minecraft:rideable": {
+     "seat_count": 1,
+     "crouching_skip_interact": true,
+     "pull_in_entities": false,
+     "family_types": [
+      "player"
+     ],
+     "seats": [
+      {
+       "position": [
+        0.0,
+        -0.21,
+        0.0
+       ]
+      }
+     ]
+    },
+    "minecraft:damage_sensor": {
+     "triggers": [
+      {
+       "cause": "fall",
+       "deals_damage": "no"
+      },
+      {
+       "cause": "suffocation",
+       "deals_damage": "no"
+      },
+      {
+       "cause": "fly_into_wall",
+       "deals_damage": "no"
+      }
+     ]
+    },
+    "minecraft:navigation.walk": {
+     "can_path_over_water": true,
+     "avoid_damage_blocks": true
+    },
+    "minecraft:movement.basic": {},
+    "minecraft:jump.static": {},
+    "minecraft:input_ground_controlled": {},
+    "minecraft:variable_max_auto_step": {
+     "base_value": 0.5625,
+     "controlled_value": 1.0625,
+     "jump_prevented_value": 0.5625
+    }
+   }
+  },
+  "components": {
+   "minecraft:type_family": {
+    "family": [
+     "horse",
+     "mob",
+     "ghost_vessel"
+    ]
+   },
+   "minecraft:health": {
+    "value": 22,
+    "max": 22
+   },
+   "minecraft:collision_box": {
+    "width": 1.4,
+    "height": 1.6
+   },
+   "minecraft:physics": {},
+   "minecraft:pushable": {
+    "is_pushable": false,
+    "is_pushable_by_piston": true
+   },
+   "minecraft:movement": {
+    "value": 0.2
+   },
+   "minecraft:breathable": {
+    "total_supply": 15,
+    "suffocate_time": 0,
+    "breathes_air": true,
+    "breathes_water": true
+   },
+   "minecraft:nameable": {
+    "always_show": true,
+    "allow_name_tag_renaming": false
+   },
+   "minecraft:persistent": {},
+   "minecraft:conditional_bandwidth_optimization": {}
+  },
+  "events": {
+   "minecraft:entity_spawned": {
+    "add": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    }
+   },
+   "ghost:to_corpse": {
+    "remove": {
+     "component_groups": [
+      "ghost:possessed"
+     ]
+    },
+    "add": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    },
+    "set_property": {
+     "ghost:corpse": true
+    }
+   },
+   "ghost:to_possessed": {
+    "remove": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    },
+    "add": {
+     "component_groups": [
+      "ghost:possessed"
+     ]
+    },
+    "set_property": {
+     "ghost:corpse": false
+    }
+   }
+  }
+ }
+}

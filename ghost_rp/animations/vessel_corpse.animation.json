@@ -459,6 +459,1026 @@
      ]
     }
    }
+  },
+  "animation.ghost.corpse.allay": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      10.01,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.armadillo": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.axolotl": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.bogged": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.breeze": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.camel": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7.6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.camel_husk": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7.6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.cat": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      2.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.cod": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      5.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.copper_golem": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.creaking": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      16,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.dolphin": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      11.25,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.donkey": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      14,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.drowned": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.25,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.elder_guardian": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      28.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.endermite": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      3,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.frog": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      9.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.glow_squid": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      8,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.guardian": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      28.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.happy_ghast": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      64,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.hoglin": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      13,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.horse": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      14,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.llama": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      11.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.magma_cube": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.mooshroom": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.mule": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      14,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.nautilus": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      18,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.ocelot": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      2.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.panda": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      9.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.parched": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7.05,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.parrot": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      14.1,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.piglin": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.25,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.piglin_brute": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.25,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.pillager": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.pufferfish": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      3.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.ravager": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      12.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.salmon": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      10.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.shulker": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.silverfish": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      5.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.skeleton_horse": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      14,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.slime": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      3.3,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.sniffer": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      13.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.snow_golem": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      12.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.squid": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      8,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.strider": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      20,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.sulfur_cube": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      9,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.tadpole": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.trader_llama": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      11.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.tropicalfish": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      7.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.turtle": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      18.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.vex": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      11,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.vindicator": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.wandering_trader": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.1,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.warden": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      24,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.wither": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      28,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.zoglin": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      13,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.zombie_horse": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      14,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.zombie_nautilus": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      18,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.zombie_pigman": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.25,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.zombie_villager": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.1,
+      0
+     ]
+    }
+   }
   }
  }
 }

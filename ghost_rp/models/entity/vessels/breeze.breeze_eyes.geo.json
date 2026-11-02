@@ -1,0 +1,137 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.breeze.breeze_eyes",
+    "texture_width": 32,
+    "texture_height": 32,
+    "visible_bounds_width": 5.54,
+    "visible_bounds_height": 3.77,
+    "visible_bounds_offset": [
+     0,
+     1.25,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "body",
+     "pivot": [
+      0,
+      0,
+      0
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "rods",
+     "parent": "body",
+     "pivot": [
+      0,
+      16,
+      0
+     ]
+    },
+    {
+     "name": "head",
+     "parent": "body",
+     "pivot": [
+      0,
+      20,
+      0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -4,
+        20,
+        -4
+       ],
+       "size": [
+        8,
+        8,
+        8
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "eyes",
+     "parent": "head",
+     "pivot": [
+      0,
+      20,
+      0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -5,
+        22,
+        -4.2
+       ],
+       "size": [
+        10,
+        3,
+        4
+       ],
+       "uv": [
+        4,
+        24
+       ]
+      }
+     ]
+    },
+    {
+     "name": "tornado_body",
+     "pivot": [
+      0,
+      0,
+      0
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "tornado_bottom",
+     "parent": "tornado_body",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "tornado_mid",
+     "parent": "tornado_bottom",
+     "pivot": [
+      0,
+      7,
+      0
+     ]
+    },
+    {
+     "name": "tornado_top",
+     "parent": "tornado_mid",
+     "pivot": [
+      0,
+      13,
+      0
+     ]
+    }
+   ]
+  }
+ ]
+}

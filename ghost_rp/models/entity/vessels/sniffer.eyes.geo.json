@@ -1,0 +1,90 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.sniffer.eyes",
+    "texture_width": 16,
+    "texture_height": 16,
+    "visible_bounds_width": 6,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     1.5,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "bone",
+     "pivot": [
+      0,
+      19,
+      0
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "body",
+     "pivot": [
+      0,
+      0,
+      0
+     ],
+     "parent": "bone"
+    },
+    {
+     "name": "head",
+     "pivot": [
+      0,
+      13.5,
+      -19.4
+     ],
+     "parent": "body",
+     "cubes": [
+      {
+       "origin": [
+        -4.75,
+        11.9,
+        -31.1
+       ],
+       "size": [
+        3,
+        2,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        1.75,
+        11.9,
+        -31.1
+       ],
+       "size": [
+        3,
+        2,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

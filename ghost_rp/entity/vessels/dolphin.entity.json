@@ -1,0 +1,44 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_dolphin",
+   "materials": {
+    "default": "dolphin",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/dolphin",
+    "baby": "textures/entity/dolphin/dolphin_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.dolphin.default",
+    "baby": "geometry.ghost.dolphin.baby",
+    "ghost_eyes": "geometry.ghost.dolphin.eyes"
+   },
+   "animations": {
+    "move": "animation.dolphin.move",
+    "move_controller": "controller.animation.dolphin.general",
+    "ghost_corpse": "animation.ghost.corpse.dolphin",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "scripts": {
+    "animate": [
+     "move_controller",
+     "ghost_corpse_ctrl"
+    ],
+    "scale": "query.is_baby ? (1 / 0.65) : 1.0"
+   },
+   "particle_effects": {
+    "dolphin_move_particle": "minecraft:dolphin_move_particle"
+   },
+   "render_controllers": [
+    "controller.render.dolphin.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

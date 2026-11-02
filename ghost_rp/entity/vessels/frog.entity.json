@@ -1,0 +1,57 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_frog",
+   "materials": {
+    "default": "frog",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "temperate": "textures/entity/frog/temperate_frog",
+    "cold": "textures/entity/frog/cold_frog",
+    "warm": "textures/entity/frog/warm_frog",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.frog.default",
+    "ghost_eyes": "geometry.ghost.frog.eyes"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.moving = query.ground_speed > 0 || query.vertical_speed > 0;"
+    ]
+   },
+   "animations": {
+    "croak": "animation.frog.croak",
+    "jump": "animation.frog.jump",
+    "tongue": "animation.frog.tongue",
+    "walk": "animation.frog.walk",
+    "swim": "animation.frog.swim",
+    "idle_water": "animation.frog.idle.water",
+    "look_at_target": "animation.common.look_at_target",
+    "ghost_corpse": "animation.ghost.corpse.frog"
+   },
+   "animation_controllers": [
+    {
+     "general": "controller.animation.frog.general"
+    },
+    {
+     "croaking": "controller.animation.frog.croaking"
+    },
+    {
+     "eat_mob": "controller.animation.frog.eat_mob"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.frog",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

@@ -1,5 +1,5 @@
 // =====================================================================
-//  GHOST MOD V4: MIND REALM  -  Minecraft Bedrock add-on
+//  GHOST MOD V5: EVERY MIND  -  Minecraft Bedrock add-on
 //  (works on phone, tablet, PC and console)
 //
 //  When a player dies they come back as a see-through black & white
@@ -23,6 +23,7 @@ import {
   EasingType, InputPermissionCategory, EntityDamageCause,
 } from "@minecraft/server";
 import { HEADS } from "./mind_heads.js";
+import { AUTO_BODIES, AUTO_MOBS } from "./bodies_auto.js";
 
 // ----------------------------- settings ------------------------------
 const CFG = {
@@ -120,7 +121,7 @@ const SPIRIT_TAG = "ghost_mind_spirit";
 const DIMENSIONS = ["minecraft:overworld", "minecraft:nether", "minecraft:the_end"];
 const GHOST_EFFECTS = [
   "invisibility", "weakness", "resistance", "fire_resistance", "water_breathing",
-  "night_vision", "saturation", "slow_falling", "levitation",
+  "night_vision", "saturation", "slow_falling", "levitation", "jump_boost",
 ];
 const ATTACK = (EntityDamageCause && EntityDamageCause.entityAttack) || "entityAttack";
 const LOCK_SLOT = (ItemLockMode && (ItemLockMode.slot ?? ItemLockMode.Slot)) || "slot";
@@ -141,7 +142,6 @@ const MOB_TO_BODY = {
   "minecraft:bat": "bat", "minecraft:villager_v2": "villager", "minecraft:villager": "villager",
 };
 const BODY_TO_MOB = {};
-for (const [mob, key] of Object.entries(MOB_TO_BODY)) if (!BODY_TO_MOB[key]) BODY_TO_MOB[key] = mob;
 
 // melee: damage when you hit something while in the body. power: the tap ability.
 // fly: blocks per tick when flying. jump: jump strength. climb: walks up walls.
@@ -175,6 +175,11 @@ const BODIES = {
   bat: { name: "Bat", melee: 1, fly: 0.36, power: "echo", powerName: "Echolocation", cd: 120, desc: "Reveal everything around you. You can fly!", sound: "mob.bat.idle", trial: "parkour", palette: ["minecraft:black_concrete", "minecraft:gray_concrete", "minecraft:brown_terracotta"] },
   villager: { name: "Villager", melee: 2, power: "ambush", powerName: "Ambush", cd: 300, desc: "Look harmless... your next hit deals triple damage", sound: "mob.villager.haggle", trial: "maze", palette: ["minecraft:brown_terracotta", "minecraft:white_concrete", "minecraft:pink_terracotta"] },
 };
+
+// Every other vanilla mob (generated from Mojang's files by tools/generate_vessels.py).
+for (const [mob, key] of Object.entries(AUTO_MOBS)) if (!MOB_TO_BODY[mob]) MOB_TO_BODY[mob] = key;
+for (const [key, body] of Object.entries(AUTO_BODIES)) if (!BODIES[key]) BODIES[key] = body;
+for (const [mob, key] of Object.entries(MOB_TO_BODY)) if (!BODY_TO_MOB[key]) BODY_TO_MOB[key] = mob;
 
 // ----------------------------- runtime state -------------------------
 const cooldowns = new Map();     // playerId -> { ability: readyTick }
@@ -573,13 +578,14 @@ function becomeGhost(p, fresh) {
 
 function sendHelp(p) {
   const lines = [
-    "§8========== §fGHOST MOD V4: MIND REALM §8==========",
+    "§8========== §fGHOST MOD V5: EVERY MIND §8==========",
     "§7You died and became a ghost. Tap your spectral tools:",
     "§fSpirit Reaper §7- drain the life of living players.  §fHaunting Hand §7- haunt blocks, tap air = Spirit Sense.",
     "§fWailing Bell §7- a terrifying wail.  §fSpectral Wisp §7- dash.  §fPhase Veil §7- drift through walls.",
-    "§5CORPSES: §7mobs that die near you leave a corpse. Tap it to possess it instantly!",
+    "§5CORPSES: §7almost every mob (86 kinds!) leaves a corpse when it dies near you. Tap it to possess it instantly!",
     "§dMIND DIVE: §7hit a LIVING mob with the §dMind Dive §7to enter its brain in the §dMind Realm§7, a dimension of its own.",
     "§7  Beat its mind trial - §fSpirit Duel§7, §fMind Parkour§7, §fThought Maze §7or §fMemory Hunt§7 - to take its body.",
+    "§7  Inside a mind you can jump 2 blocks high.",
     "§7  Inside a body: tap §bits power§7, hit things with its strength. Leave with §fLeave Body §7or dismount.",
     `§bSoul Heart §7- revive once it recharges (${Math.round(CFG.reviveSeconds / 60)} min). Friends can revive you with a §6Golden Apple §7at your grave.`,
     "§7Hold JUMP to float up, sneak to sink.",
@@ -1137,7 +1143,7 @@ function hurt(st, target, amount, effects = []) {
   for (const [id, dur, amp] of effects) effect(target, id, dur, amp);
 }
 
-function launch(st, p, type, speed, spreadDeg = 0, effectOnHit) {
+function launch(st, p, type, speed, spreadDeg = 0, effectOnHit, dmgOnHit) {
   const body = st.body;
   const view = p.getViewDirection();
   const yaw = Math.atan2(view.z, view.x) + (spreadDeg * Math.PI) / 180;
@@ -1155,9 +1161,64 @@ function launch(st, p, type, speed, spreadDeg = 0, effectOnHit) {
     } else {
       proj.applyImpulse(vel);
     }
-    if (effectOnHit) ownProjectiles.set(proj.id, { effect: effectOnHit, until: now() + 200 });
+    if (effectOnHit || dmgOnHit) ownProjectiles.set(proj.id, { effect: effectOnHit, dmg: dmgOnHit, owner: body, until: now() + 200 });
     return proj;
   } catch { return undefined; }
+}
+
+/** Where the possessor is aiming: the first entity in view, else the block, else a point far ahead. */
+function aimPoint(p, st, range) {
+  try {
+    const hit = p.getEntitiesFromViewDirection({ maxDistance: range }).find((h) => h.entity.id !== st.body.id && h.entity.id !== p.id);
+    if (hit) return { x: hit.entity.location.x, y: hit.entity.location.y + 0.8, z: hit.entity.location.z, entity: hit.entity };
+  } catch { /* ignore */ }
+  try {
+    const b = p.getBlockFromViewDirection({ maxDistance: range });
+    if (b) return { x: b.block.location.x + 0.5, y: b.block.location.y + 1, z: b.block.location.z + 0.5 };
+  } catch { /* ignore */ }
+  const v = p.getViewDirection(), h = st.body.getHeadLocation();
+  return { x: h.x + v.x * range, y: h.y + v.y * range, z: h.z + v.z * range };
+}
+
+function trail(dim, from, to, id, step = 0.8) {
+  const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+  const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+  for (let t = 0; t <= len; t += step) particle(dim, id, { x: from.x + (dx / len) * t, y: from.y + (dy / len) * t, z: from.z + (dz / len) * t });
+}
+
+/** Instant bolts in a fan (Minecraft doesn't let add-ons spawn fireballs): burn and hurt what they reach. */
+function bolts(p, st, spreads, range, dmg, fireSecs, particleId) {
+  const head = st.body.getHeadLocation();
+  const view = p.getViewDirection();
+  const all = targetsAround(st, p, head, range);
+  for (const deg of spreads) {
+    const yaw = Math.atan2(view.z, view.x) + (deg * Math.PI) / 180;
+    const flat = Math.sqrt(view.x * view.x + view.z * view.z);
+    const dir = { x: Math.cos(yaw) * flat, y: view.y, z: Math.sin(yaw) * flat };
+    let best, bd = Infinity;
+    for (const t of all) {
+      const dx = t.location.x - head.x, dy = t.location.y + 0.9 - head.y, dz = t.location.z - head.z;
+      const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      if ((dx * dir.x + dy * dir.y + dz * dir.z) / len > 0.94 && len < bd) { bd = len; best = t; }
+    }
+    const end = best ? { x: best.location.x, y: best.location.y + 0.9, z: best.location.z } : vadd(head, dir, range);
+    trail(st.body.dimension, head, end, particleId);
+    if (best) {
+      hurt(st, best, dmg);
+      if (fireSecs) try { best.setOnFire(fireSecs, true); } catch { /* ignore */ }
+    }
+  }
+}
+
+/** An explosion where the possessor is aiming (ghast fireballs, wither skulls). */
+function blastAtAim(p, st, power, fire, effects = []) {
+  const at = aimPoint(p, st, 48);
+  const head = st.body.getHeadLocation();
+  trail(st.body.dimension, head, at, fire ? "minecraft:basic_flame_particle" : "minecraft:basic_smoke_particle", 1.2);
+  system.runTimeout(() => {
+    try { st.body.dimension.createExplosion(at, power, { breaksBlocks: CFG.possessedExplosionsBreakBlocks, causesFire: fire, source: st.body }); } catch { /* ignore */ }
+    if (effects.length) for (const t of targetsAround(st, p, at, power + 1.5)) for (const [id, dur, amp] of effects) effect(t, id, dur, amp);
+  }, 4);
 }
 
 function leap(st, p, forward, up) {
@@ -1252,8 +1313,69 @@ const POWERS = {
     burst(dim, "minecraft:portal_reverse_particle", { x: dest.x, y: dest.y + 1, z: dest.z }, 12, 1.5);
     sound(dim, "mob.endermen.portal", dest);
   },
-  fireballs(p, st) { for (const s of [-6, 0, 6]) launch(st, p, "minecraft:small_fireball", 1.4, s); sound(st.body.dimension, "mob.blaze.shoot", st.body.location); },
-  ghast_ball(p, st) { launch(st, p, "minecraft:fireball", 1.2); sound(st.body.dimension, "mob.ghast.fireball", st.body.location); },
+  fireballs(p, st) { bolts(p, st, [-7, 0, 7], 18, 5, 4, "minecraft:basic_flame_particle"); sound(st.body.dimension, "mob.blaze.shoot", st.body.location); },
+  ghast_ball(p, st) { blastAtAim(p, st, 2.2, true); sound(st.body.dimension, "mob.ghast.fireball", st.body.location); },
+  skulls(p, st) { blastAtAim(p, st, 1.6, false, [["wither", 160, 1]]); sound(st.body.dimension, "mob.wither.shoot", st.body.location); },
+  shell(p, st) {
+    effect(st.body, "resistance", 160, 3); effect(st.body, "slowness", 160, 1);
+    burst(st.body.dimension, "minecraft:white_smoke_particle", st.body.location, 10, 1.2);
+    sound(st.body.dimension, "mob.armadillo.roll", st.body.location);
+    flash(p, "§7You hide in your shell - almost nothing can hurt you!", 50);
+  },
+  venom_volley(p, st) { for (const s of [-8, 0, 8]) launch(st, p, "minecraft:arrow", 2.6, s, ["poison", 100, 0]); sound(st.body.dimension, "random.bow", st.body.location); },
+  wind(p, st) {
+    launch(st, p, "minecraft:wind_charge_projectile", 1.6);
+    leap(st, p, 0.3, 0.9);
+    sound(st.body.dimension, "mob.breeze.shoot", st.body.location);
+  },
+  gallop(p, st) {
+    effect(st.body, "speed", 120, 3);
+    leap(st, p, 0.8, 0.3);
+    sound(st.body.dimension, "mob.horse.gallop", st.body.location);
+  },
+  trident(p, st) { launch(st, p, "minecraft:arrow", 3.2, 0, undefined, 6); sound(st.body.dimension, "item.trident.throw", st.body.location); },
+  laser(p, st) {
+    const target = aimPoint(p, st, 24).entity;
+    if (!target) { flash(p, "§7Look at something to lock your beam onto it."); return false; }
+    st.beam = { at: now() + 30, target };
+    sound(st.body.dimension, "mob.guardian.attack_loop", st.body.location);
+    flash(p, "§bCharging beam...", 30);
+  },
+  spit(p, st) { launch(st, p, "minecraft:snowball", 1.7, 0, ["slowness", 80, 1], 3); sound(st.body.dimension, "mob.llama.spit", st.body.location); },
+  rage(p, st) {
+    st.rageUntil = now() + 200;
+    effect(st.body, "speed", 200, 1);
+    burst(st.body.dimension, "minecraft:villager_angry", { x: st.body.location.x, y: st.body.location.y + 1.5, z: st.body.location.z }, 4);
+    flash(p, "§cRAGE! §7Double damage and speed for 10 seconds", 50);
+  },
+  bullet(p, st) {
+    for (const t of targetsInFront(st, p, 9, 0.4)) {
+      effect(t, "levitation", 70, 1);
+      trail(st.body.dimension, st.body.getHeadLocation(), { x: t.location.x, y: t.location.y + 0.8, z: t.location.z }, "minecraft:endrod");
+    }
+    sound(st.body.dimension, "mob.shulker.shoot", st.body.location);
+  },
+  snowballs(p, st) { for (const s of [-8, 0, 8]) launch(st, p, "minecraft:snowball", 1.6, s, undefined, 1); sound(st.body.dimension, "mob.snowgolem.shoot", st.body.location); },
+  sonic_boom(p, st) {
+    const head = st.body.getHeadLocation(), v = p.getViewDirection();
+    for (const t of targetsAround(st, p, head, 18)) {
+      const dx = t.location.x - head.x, dy = t.location.y + 0.9 - head.y, dz = t.location.z - head.z;
+      const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      if ((dx * v.x + dy * v.y + dz * v.z) / len > 0.9) { hurt(st, t, 12); knockAway(t, head, 2.5, 0.5); }
+    }
+    for (let i = 2; i <= 18; i += 2) particle(st.body.dimension, "minecraft:sonic_explosion", vadd(head, v, i));
+    sound(st.body.dimension, "mob.warden.sonic_boom", head);
+  },
+  ink(p, st) {
+    for (const t of targetsAround(st, p, st.body.location, 6)) { effect(t, "blindness", 100); effect(t, "darkness", 100); }
+    burst(st.body.dimension, "minecraft:squid_ink_bubble", st.body.location, 25, 4);
+    sound(st.body.dimension, "mob.squid.ink_squirt", st.body.location);
+  },
+  puff(p, st) {
+    for (const t of targetsAround(st, p, st.body.location, 3.5)) { effect(t, "poison", 140, 1); effect(t, "nausea", 100); }
+    burst(st.body.dimension, "minecraft:water_splash_particle", st.body.location, 15, 2);
+    sound(st.body.dimension, "random.pop", st.body.location, 0.6);
+  },
   hex(p, st) {
     for (const t of targetsInFront(st, p, 7, 0.2)) {
       effect(t, "poison", 120, 0); effect(t, "slowness", 120, 1); effect(t, "weakness", 120, 0);
@@ -1279,7 +1401,14 @@ const POWERS = {
           else break;
         } catch { break; }
       }
-      system.runTimeout(() => { try { dim.spawnEntity("minecraft:evocation_fang", pos); } catch { /* ignore */ } }, i * 2);
+      system.runTimeout(() => {
+        try { dim.spawnEntity("minecraft:evocation_fang", pos); } catch {
+          // fangs can't be summoned here: bite directly instead
+          particle(dim, "minecraft:critical_hit_emitter", pos);
+          for (const t of targetsAround(st, p, pos, 1.3)) hurt(st, t, 6);
+        }
+        sound(dim, "mob.evocation_fangs.attack", pos, 1, 0.6);
+      }, i * 2);
     }
   },
   slam(p, st) {
@@ -1337,6 +1466,7 @@ function bodyMelee(p, st, target) {
   if (now() < st.nextMelee) return;
   st.nextMelee = now() + CFG.cooldowns.melee;
   let dmg = st.def.melee;
+  if (st.rageUntil > now()) dmg *= 2;
   if (st.ambushUntil > now()) {
     dmg *= 3;
     st.ambushUntil = 0;
@@ -1426,6 +1556,20 @@ function possessionTick(p, st, tick) {
     if (best) {
       hurt(st, best, s.dmg, s.effects);
       particle(body.dimension, "minecraft:critical_hit_emitter", { x: best.location.x, y: best.location.y + 1, z: best.location.z });
+    }
+  }
+
+  // guardian beam: charges for 1.5s, then strikes the locked target
+  if (st.beam) {
+    const t = st.beam.target;
+    const head = body.getHeadLocation();
+    if (!isValid(t) || dist(t.location, body.location) > 26) st.beam = undefined;
+    else if (tick >= st.beam.at) {
+      st.beam = undefined;
+      hurt(st, t, 8);
+      trail(body.dimension, head, { x: t.location.x, y: t.location.y + 0.9, z: t.location.z }, "minecraft:critical_hit_emitter", 1);
+    } else if (tick % 2 === 0) {
+      trail(body.dimension, head, { x: t.location.x, y: t.location.y + 0.9, z: t.location.z }, "minecraft:bubble_column_up_particle", 1.2);
     }
   }
 
@@ -1651,7 +1795,14 @@ function buildDuel(p, d, dim) {
   const { C } = d;
   d.start = { x: C.x + 0.5, y: C.y + 1, z: C.z + 8.5 };
   d.face = { x: C.x + 0.5, y: C.y + 2, z: C.z - 6.5 };
-  const s = dim.spawnEntity(BODY_TO_MOB[d.key], { x: C.x + 0.5, y: C.y + 1, z: C.z - 6.5 });
+  spawnSpirit(p, d, dim);
+}
+
+function spawnSpirit(p, d, dim) {
+  const at = { x: d.C.x + 0.5, y: d.C.y + 1, z: d.C.z - 6.5 };
+  let s;
+  try { s = dim.spawnEntity(BODY_TO_MOB[d.key], at); } catch { s = undefined; }
+  if (!s) { try { s = dim.spawnEntity("minecraft:zombie", at); } catch { return; } } // a few mobs can't be summoned
   s.nameTag = `§fSpirit of the ${d.def.name}`;
   s.addTag(SPIRIT_TAG);
   s.setDynamicProperty(DP.owner, p.id);
@@ -1746,12 +1897,18 @@ function buildMemories(p, d, dim) {
   const { C } = d;
   const pal = mindPalette(d);
   const spots = [];
-  for (let i = 0; i < 4; i++) {          // raised "lobes" with steps up to them
+  for (let i = 0; i < 4; i++) {          // raised "lobes", each with a staircase of 1-block steps
     const a = (i / 4) * Math.PI * 2 + 0.4;
-    const lx = Math.round(C.x + Math.cos(a) * 8), lz = Math.round(C.z + Math.sin(a) * 8);
+    const lx = Math.round(C.x + Math.cos(a) * 9), lz = Math.round(C.z + Math.sin(a) * 9);
     const h = 1 + (i % 2);
     fill(dim, { x: lx - 1, y: C.y + 1, z: lz - 1 }, { x: lx + 1, y: C.y + h, z: lz + 1 }, pal[1]);
-    put(dim, Math.round(C.x + Math.cos(a) * 6), C.y + 1, Math.round(C.z + Math.sin(a) * 6), pal[2]);
+    // straight (not diagonal) towards the centre, so every step touches the one before it
+    const dx = C.x - lx, dz = C.z - lz;
+    const step = Math.abs(dx) >= Math.abs(dz) ? { x: Math.sign(dx), z: 0 } : { x: 0, z: Math.sign(dz) };
+    for (let k = 1; k < h + 1; k++) {
+      const sx = lx + step.x * (k + 1), sz = lz + step.z * (k + 1), sh = h - k;
+      if (sh > 0) fill(dim, { x: sx - Math.abs(step.z), y: C.y + 1, z: sz - Math.abs(step.x) }, { x: sx + Math.abs(step.z), y: C.y + sh, z: sz + Math.abs(step.x) }, pal[2]);
+    }
     spots.push({ x: lx + 0.5, y: C.y + h + 1.4, z: lz + 0.5 });
   }
   spots.push({ x: C.x + 4.5, y: C.y + 1.4, z: C.z - 3.5 }, { x: C.x - 4.5, y: C.y + 1.4, z: C.z + 2.5 });
@@ -1776,6 +1933,7 @@ function enterMind(p, d, dim) {
   try { p.teleport(d.start, { dimension: dim, facingLocation: d.face }); } catch { /* ignore */ }
   giveMindTools(p, d.trial);
   applyMindEffects(p);
+  effect(p, "jump_boost", 600, 1); // light as a thought: inside a mind you can jump 2 blocks high
   // establishing shot: high inside the giant head, facing its face, then down into your own eyes
   d.phase = "intro";
   d.t1 = now();
@@ -1830,7 +1988,7 @@ function onSpiritDeath(spirit) {
 function runTrial(p, d, tick) {
   if (!isMind(p.dimension)) { endDive(p, "abort", "§7You were pulled out of the mind."); return; }
   if (tick >= d.until) { endDive(p, "fail", "§cTime ran out! The mind shakes you loose."); return; }
-  if (tick % 20 === 0) applyMindEffects(p);
+  if (tick % 20 === 0) { applyMindEffects(p); effect(p, "jump_boost", 600, 1); }
   const loc = p.location;
 
   const slipped = d.trial === "parkour" ? loc.y < d.C.y + 2.2 : loc.y < d.C.y - 2;
@@ -1850,7 +2008,7 @@ function runTrial(p, d, tick) {
 
   if (d.trial === "duel") {
     const s = getEntity(d.spiritId);
-    if (!s) { endDive(p, "win"); return; }
+    if (!s) { spawnSpirit(p, d, p.dimension); return; } // vanished without dying (e.g. turned into another mob)
     if (dist(s.location, d.C) > 16) try { s.teleport({ x: d.C.x + 0.5, y: d.C.y + 1, z: d.C.z + 0.5 }); } catch { /* ignore */ }
     if (tick % 15 === 0) particle(s.dimension, "minecraft:soul_particle", { x: s.location.x, y: s.location.y + 2.2, z: s.location.z });
   } else if (d.trial === "parkour" || d.trial === "maze") {
@@ -1935,6 +2093,7 @@ function endDive(p, result, message) {
     try { p.playSound("mob.elderguardian.curse", { pitch: 0.6 }); } catch { /* ignore */ }
   }
   removeItems(p, (id) => id === T.escape || id === T.reaper);
+  try { p.removeEffect("jump_boost"); } catch { /* ignore */ }
   applyGhostEffects(p);
   resetView(p);
   try {
@@ -2013,6 +2172,7 @@ function abandonDive(p) {
   teardown(d);
   dives.delete(p.id);
   p.setDynamicProperty(DP.dive, undefined);
+  try { p.removeEffect("jump_boost"); } catch { /* ignore */ }
   resetView(p);
   const mob = getEntity(d.mobId);
   if (mob) release(mob, 0);
@@ -2030,6 +2190,7 @@ function recoverDive(p) {
     try { p.teleport({ x: info.ret.x, y: info.ret.y + 0.5, z: info.ret.z }, { dimension: world.getDimension(info.ret.dim) }); } catch { /* ignore */ }
   }
   resetView(p);
+  try { p.removeEffect("jump_boost"); } catch { /* ignore */ }
   giveGhostTools(p);
   flash(p, "§7You wake from the mind you were exploring.", 60);
   return true;
@@ -2138,6 +2299,7 @@ world.afterEvents.entityHitEntity.subscribe((ev) => {
 });
 
 world.afterEvents.projectileHitEntity.subscribe((ev) => {
+  // (projectile powers can carry extra damage, e.g. a trident or spit)
   let hit;
   try { hit = ev.getEntityHit()?.entity; } catch { hit = undefined; }
   if (hit && isPlayer(hit) && dives.has(hit.id)) {
@@ -2147,7 +2309,9 @@ world.afterEvents.projectileHitEntity.subscribe((ev) => {
   const info = ownProjectiles.get(ev.projectile?.id);
   if (!info) return;
   ownProjectiles.delete(ev.projectile.id);
-  if (hit) effect(hit, info.effect[0], info.effect[1], info.effect[2]);
+  if (!hit) return;
+  if (info.effect) effect(hit, info.effect[0], info.effect[1], info.effect[2]);
+  if (info.dmg && isValid(info.owner)) spiritDamage(hit, info.dmg, info.owner);
 });
 
 world.afterEvents.playerInteractWithEntity.subscribe((ev) => {

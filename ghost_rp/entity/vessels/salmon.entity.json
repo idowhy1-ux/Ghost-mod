@@ -1,0 +1,45 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_salmon",
+   "materials": {
+    "default": "salmon",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/fish/salmon",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.salmon.default",
+    "ghost_eyes": "geometry.ghost.salmon.eyes"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.ZRot = !query.is_in_water ? Math.cos((query.time_stamp + query.frame_alpha) * 14.32) * 90 : 0.0;",
+     "variable.AnimationAmountBlend = Math.lerp(variable.AnimationAmountPrev, variable.AnimationAmount, query.frame_alpha);"
+    ]
+   },
+   "animations": {
+    "flop": "animation.salmon.flop",
+    "swim": "animation.salmon.swim",
+    "ghost_corpse": "animation.ghost.corpse.salmon"
+   },
+   "animation_controllers": [
+    {
+     "general": "controller.animation.fish.general"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.salmon",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

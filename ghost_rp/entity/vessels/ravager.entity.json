@@ -1,0 +1,53 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_ravager",
+   "textures": {
+    "default": "textures/entity/illager/ravager",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "materials": {
+    "default": "ravager",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.ravager.default",
+    "ghost_eyes": "geometry.ghost.ravager.eyes"
+   },
+   "render_controllers": [
+    "controller.render.ravager",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "animations": {
+    "walk": "animation.ravager.walk",
+    "look_at_target": "animation.common.look_at_target",
+    "idle_mouth": "animation.ravager.idle_mouth",
+    "stunned": "animation.ravager.stunned",
+    "roaring": "animation.ravager.roaring",
+    "move": "controller.animation.ravager.move",
+    "head": "controller.animation.ravager.head_movement",
+    "biting": "animation.ravager.biting",
+    "ghost_corpse": "animation.ghost.corpse.ravager",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.roar_length = 1.0;",
+     "variable.bite_anim_duration = 0.75f;",
+     "variable.bite_neck_length = 10;"
+    ],
+    "animate": [
+     "move",
+     "head",
+     "ghost_corpse_ctrl"
+    ]
+   },
+   "particle_effects": {
+    "stun_particles": "minecraft:stunned_emitter"
+   }
+  }
+ }
+}

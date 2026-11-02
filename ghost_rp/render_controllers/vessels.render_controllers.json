@@ -27,6 +27,25 @@
    "textures": [
     "query.is_baby ? array.baby_skins[0.0 + query.is_angry * 2] : array.skins[0.0 + query.is_angry * 2]"
    ]
+  },
+  "controller.render.ghost.copper_golem.copper_golem_flower": {
+   "geometry": "Geometry.flower",
+   "materials": [
+    {
+     "*": "Material.flower"
+    }
+   ],
+   "textures": [
+    "Texture.flower"
+   ],
+   "part_visibility": [
+    {
+     "*": "false"
+    },
+    {
+     "flower": "0.0"
+    }
+   ]
   }
  }
 }

@@ -1,0 +1,90 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.creaking.eyes",
+    "texture_width": 16,
+    "texture_height": 16,
+    "visible_bounds_width": 6,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     1.5,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "root",
+     "pivot": [
+      0,
+      0,
+      0
+     ],
+     "parent": "ghost_root"
+    },
+    {
+     "name": "upperBody",
+     "pivot": [
+      -1,
+      19,
+      0
+     ],
+     "parent": "root"
+    },
+    {
+     "name": "head",
+     "pivot": [
+      -4,
+      30,
+      0
+     ],
+     "parent": "upperBody",
+     "cubes": [
+      {
+       "origin": [
+        -6.0,
+        35.0,
+        -3.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        -3.0,
+        35.0,
+        -3.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

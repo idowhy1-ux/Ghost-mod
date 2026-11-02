@@ -1,0 +1,59 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_allay",
+   "materials": {
+    "default": "allay",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/allay/allay",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.allay.default",
+    "ghost_eyes": "geometry.ghost.allay.eyes"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.holding_trident = query.is_item_name_any('slot.weapon.mainhand', 'minecraft:trident');"
+    ]
+   },
+   "animations": {
+    "idle": "animation.allay.idle",
+    "fly": "animation.allay.fly",
+    "hold_item": "animation.allay.hold_item",
+    "dance": "animation.allay.dance",
+    "hold_item_fly": "animation.allay.hold_item_fly",
+    "look_at_target_default": "animation.allay.look_at_target.default",
+    "ghost_corpse": "animation.ghost.corpse.allay"
+   },
+   "animation_controllers": [
+    {
+     "general": "controller.animation.allay.general"
+    },
+    {
+     "look_at_target": "controller.animation.allay.look_at_target"
+    },
+    {
+     "holding": "controller.animation.allay.holding"
+    },
+    {
+     "dancing": "controller.animation.allay.dancing"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.allay",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "enable_attachables": true,
+   "held_item_ignores_lighting": true
+  }
+ }
+}

@@ -1,4 +1,4 @@
-"""Builds ghost_bp/scripts/mind_heads.js for Ghost Mod V4.
+"""Builds ghost_bp/scripts/mind_heads.js for Ghost Mod (V3.1+).
 
 The mind realm of every possessable mob is a giant hollow copy of its HEAD.
 This script reads each mob's real head from Mojang's vanilla packs (the head
@@ -17,7 +17,7 @@ from collections import Counter
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from generate_vessels import ROOT, VESSELS, Vanilla, ensure_samples  # noqa: E402
+from generate_vessels import ROOT, Vanilla, all_vessels, ensure_samples  # noqa: E402
 
 OUT = os.path.join(ROOT, "ghost_bp", "scripts", "mind_heads.js")
 MAX_FACE = 16  # faces are reduced to at most 16x16 pixels (2+ blocks per pixel in the 32-block room)
@@ -85,6 +85,9 @@ def head_cube(g, prefer):
     bones = g["bones"]
     by_name = {b["name"]: b for b in bones}
     head = next((by_name[n] for n in ([prefer] if prefer else []) + ["head", "Head"] if n in by_name), None)
+    if head is None:  # no head bone: use the model's biggest part
+        head = max((b for b in bones if b.get("cubes")),
+                   key=lambda b: max(c["size"][0] * c["size"][1] * c["size"][2] for c in b["cubes"]))
 
     def descendants(name):
         out = [by_name[name]]
@@ -134,11 +137,13 @@ def main():
     van = Vanilla(samples)
 
     heads = {}
-    for (key, vid, name, *_rest) in VESSELS:
+    for (key, vid, name, *_rest) in all_vessels(van):
         eye_bone = _rest[-1]
         _, src = van.entities[vid]
         desc = src["minecraft:client_entity"]["description"]
-        geo_key = "sheared" if "sheared" in desc["geometry"] else "default"  # a sheep's face is under its wool
+        geos = desc["geometry"]
+        # a sheep's face is under its wool; some models (tropical fish) have no "default"
+        geo_key = "sheared" if "sheared" in geos else "default" if "default" in geos else next(iter(geos))
         gkind, _, g = van.resolve_geo(desc["geometry"][geo_key])
         meta = g["description"] if gkind == "new" else g
         tw = meta.get("texture_width" if gkind == "new" else "texturewidth")

@@ -1,0 +1,376 @@
+{
+ "format_version": "1.8.0",
+ "geometry.ghost.pufferfish.mid": {
+  "visible_bounds_width": 3.6,
+  "visible_bounds_height": 2.8,
+  "texturewidth": 32,
+  "textureheight": 32,
+  "bones": [
+   {
+    "name": "ghost_root",
+    "pivot": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "name": "body",
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       1.0,
+       -2.5
+      ],
+      "size": [
+       5.0,
+       5.0,
+       5.0
+      ],
+      "uv": [
+       12.0,
+       22.0
+      ]
+     }
+    ],
+    "parent": "ghost_root"
+   },
+   {
+    "name": "leftFin",
+    "parent": "body",
+    "pivot": [
+     2.5,
+     5.0,
+     0.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       2.5,
+       4.0,
+       -1.5
+      ],
+      "size": [
+       2.0,
+       1.0,
+       2.0
+      ],
+      "uv": [
+       24.0,
+       3.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "rightFin",
+    "parent": "body",
+    "pivot": [
+     -2.5,
+     5.0,
+     0.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -4.5,
+       4.0,
+       -1.5
+      ],
+      "size": [
+       2.0,
+       1.0,
+       2.0
+      ],
+      "uv": [
+       24.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_top_front",
+    "parent": "body",
+    "bind_pose_rotation": [
+     45.0,
+     0.0,
+     0.0
+    ],
+    "pivot": [
+     0,
+     6.0,
+     -2.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       6.0,
+       -2.5
+      ],
+      "size": [
+       5.0,
+       1.0,
+       0.0
+      ],
+      "uv": [
+       19.0,
+       17.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_top_back",
+    "parent": "body",
+    "bind_pose_rotation": [
+     -45.0,
+     0.0,
+     0.0
+    ],
+    "pivot": [
+     0,
+     6.0,
+     2.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       6.0,
+       2.5
+      ],
+      "size": [
+       5.0,
+       1.0,
+       0.0
+      ],
+      "uv": [
+       11.0,
+       17.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_bottom_front",
+    "parent": "body",
+    "bind_pose_rotation": [
+     -45.0,
+     0.0,
+     0.0
+    ],
+    "pivot": [
+     0,
+     1.0,
+     -2.5
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       0.0,
+       -2.5
+      ],
+      "size": [
+       5.0,
+       1.0,
+       0.0
+      ],
+      "uv": [
+       18.0,
+       20.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_bottom_back",
+    "parent": "body",
+    "bind_pose_rotation": [
+     45.0,
+     0.0,
+     0.0
+    ],
+    "pivot": [
+     0.0,
+     1.0,
+     2.5
+    ],
+    "rotation": [
+     45.0,
+     0.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -2.5,
+       0.0,
+       2.5
+      ],
+      "size": [
+       5.0,
+       1.0,
+       0.0
+      ],
+      "uv": [
+       18.0,
+       20.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_left_front",
+    "parent": "body",
+    "bind_pose_rotation": [
+     0.0,
+     45.0,
+     0.0
+    ],
+    "pivot": [
+     2.5,
+     0.0,
+     -2.5
+    ],
+    "rotation": [
+     0.0,
+     45.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       2.5,
+       1.0,
+       -2.5
+      ],
+      "size": [
+       1.0,
+       5.0,
+       0.0
+      ],
+      "uv": [
+       1.0,
+       17.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_left_back",
+    "parent": "body",
+    "bind_pose_rotation": [
+     0.0,
+     -45.0,
+     0.0
+    ],
+    "pivot": [
+     2.5,
+     0.0,
+     2.5
+    ],
+    "rotation": [
+     0.0,
+     -45.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       2.5,
+       1.0,
+       2.5
+      ],
+      "size": [
+       1.0,
+       5.0,
+       0.0
+      ],
+      "uv": [
+       1.0,
+       17.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_right_front",
+    "parent": "body",
+    "bind_pose_rotation": [
+     0.0,
+     -45.0,
+     0.0
+    ],
+    "pivot": [
+     -2.5,
+     0.0,
+     -2.5
+    ],
+    "rotation": [
+     0.0,
+     -45.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -3.5,
+       1.0,
+       -2.5
+      ],
+      "size": [
+       1.0,
+       5.0,
+       0.0
+      ],
+      "uv": [
+       5.0,
+       17.0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "spines_right_back",
+    "parent": "body",
+    "bind_pose_rotation": [
+     0.0,
+     45.0,
+     0.0
+    ],
+    "pivot": [
+     -2.5,
+     0.0,
+     2.5
+    ],
+    "rotation": [
+     0.0,
+     45.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -3.5,
+       1.0,
+       2.5
+      ],
+      "size": [
+       1.0,
+       5.0,
+       0.0
+      ],
+      "uv": [
+       9.0,
+       17.0
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

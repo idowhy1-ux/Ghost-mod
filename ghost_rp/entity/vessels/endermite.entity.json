@@ -1,0 +1,38 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_endermite",
+   "materials": {
+    "default": "endermite",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/endermite",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.endermite.default",
+    "ghost_eyes": "geometry.ghost.endermite.eyes"
+   },
+   "animations": {
+    "move": "animation.endermite.move",
+    "ghost_corpse": "animation.ghost.corpse.endermite"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.endermite.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.endermite",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,189 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:entity": {
+  "description": {
+   "identifier": "ghost:vessel_tropicalfish",
+   "is_spawnable": false,
+   "is_summonable": true,
+   "properties": {
+    "ghost:corpse": {
+     "type": "bool",
+     "default": true,
+     "client_sync": true
+    }
+   }
+  },
+  "component_groups": {
+   "ghost:corpse": {
+    "minecraft:type_family": {
+     "family": [
+      "ghost_corpse",
+      "inanimate"
+     ]
+    },
+    "minecraft:collision_box": {
+     "width": 0.4,
+     "height": 0.4
+    },
+    "minecraft:knockback_resistance": {
+     "value": 1.0
+    },
+    "minecraft:damage_sensor": {
+     "triggers": [
+      {
+       "cause": "all",
+       "deals_damage": "no"
+      }
+     ]
+    },
+    "minecraft:interact": {
+     "interactions": [
+      {
+       "on_interact": {
+        "filters": {
+         "test": "has_tag",
+         "subject": "other",
+         "value": "ghost"
+        }
+       },
+       "interact_text": "action.interact.ghost_possess",
+       "swing": true
+      }
+     ]
+    }
+   },
+   "ghost:possessed": {
+    "minecraft:rideable": {
+     "seat_count": 1,
+     "crouching_skip_interact": true,
+     "pull_in_entities": false,
+     "family_types": [
+      "player"
+     ],
+     "seats": [
+      {
+       "position": [
+        0.0,
+        -1.2,
+        0.0
+       ]
+      }
+     ]
+    },
+    "minecraft:damage_sensor": {
+     "triggers": [
+      {
+       "cause": "fall",
+       "deals_damage": "no"
+      },
+      {
+       "cause": "suffocation",
+       "deals_damage": "no"
+      },
+      {
+       "cause": "fly_into_wall",
+       "deals_damage": "no"
+      }
+     ]
+    },
+    "minecraft:physics": {
+     "has_gravity": false
+    },
+    "minecraft:can_fly": {},
+    "minecraft:flying_speed": {
+     "value": 0.04
+    },
+    "minecraft:navigation.float": {
+     "can_path_over_water": true
+    },
+    "minecraft:free_camera_controlled": {
+     "strafe_speed_modifier": 1.0,
+     "backwards_movement_modifier": 0.5
+    },
+    "minecraft:vertical_movement_action": {
+     "vertical_velocity": 0.5
+    }
+   }
+  },
+  "components": {
+   "minecraft:type_family": {
+    "family": [
+     "aquatic",
+     "tropicalfish",
+     "fish",
+     "ghost_vessel"
+    ]
+   },
+   "minecraft:health": {
+    "value": 8,
+    "max": 8
+   },
+   "minecraft:collision_box": {
+    "width": 0.4,
+    "height": 0.4
+   },
+   "minecraft:physics": {},
+   "minecraft:pushable": {
+    "is_pushable": false,
+    "is_pushable_by_piston": true
+   },
+   "minecraft:movement": {
+    "value": 0.04
+   },
+   "minecraft:breathable": {
+    "total_supply": 15,
+    "suffocate_time": 0,
+    "breathes_air": true,
+    "breathes_water": true
+   },
+   "minecraft:nameable": {
+    "always_show": true,
+    "allow_name_tag_renaming": false
+   },
+   "minecraft:persistent": {},
+   "minecraft:conditional_bandwidth_optimization": {},
+   "minecraft:scale": {
+    "value": 1.3
+   }
+  },
+  "events": {
+   "minecraft:entity_spawned": {
+    "add": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    }
+   },
+   "ghost:to_corpse": {
+    "remove": {
+     "component_groups": [
+      "ghost:possessed"
+     ]
+    },
+    "add": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    },
+    "set_property": {
+     "ghost:corpse": true
+    }
+   },
+   "ghost:to_possessed": {
+    "remove": {
+     "component_groups": [
+      "ghost:corpse"
+     ]
+    },
+    "add": {
+     "component_groups": [
+      "ghost:possessed"
+     ]
+    },
+    "set_property": {
+     "ghost:corpse": false
+    }
+   }
+  }
+ }
+}

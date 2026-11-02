@@ -1,0 +1,57 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_hoglin",
+   "materials": {
+    "default": "hoglin",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/hoglin/hoglin",
+    "baby": "textures/entity/hoglin/hoglin_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.hoglin.default",
+    "baby": "geometry.ghost.hoglin.baby",
+    "ghost_eyes": "geometry.ghost.hoglin.eyes"
+   },
+   "scripts": {
+    "pre_animation": [
+     "variable.tcos_right_side = (Math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed / variable.gliding_speed_value) * 57.3;",
+     "variable.tcos_left_side = -variable.tcos_right_side;",
+     "variable.attack_head_rot =  Math.sin(variable.attack_time * 180.0) * -37.3;"
+    ],
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   },
+   "animations": {
+    "walk": "animation.hoglin.walk",
+    "look_at_target": "animation.hoglin.look_at_target",
+    "attack": "animation.hoglin.attack",
+    "hoglin_baby_scaling": "animation.hoglin.baby_scaling",
+    "ghost_corpse": "animation.ghost.corpse.hoglin"
+   },
+   "animation_controllers": [
+    {
+     "look_at_target": "controller.animation.hoglin.look_at_target"
+    },
+    {
+     "walk": "controller.animation.hoglin.walk"
+    },
+    {
+     "attack": "controller.animation.hoglin.attack"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.hoglin.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

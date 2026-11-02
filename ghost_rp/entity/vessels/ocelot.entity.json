@@ -1,0 +1,55 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_ocelot",
+   "materials": {
+    "default": "ocelot",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "black": "textures/entity/cat/blackcat",
+    "red": "textures/entity/cat/red",
+    "siamese": "textures/entity/cat/siamese",
+    "wild": "textures/entity/cat/ocelot",
+    "baby_wild": "textures/entity/cat/ocelot_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.ocelot.default",
+    "baby": "geometry.ghost.ocelot.baby",
+    "ghost_eyes": "geometry.ghost.ocelot.eyes"
+   },
+   "animations": {
+    "sneak": "animation.ocelot.sneak",
+    "walk": "animation.ocelot.walk",
+    "sprint": "animation.ocelot.sprint",
+    "sit": "animation.ocelot.sit",
+    "look_at_target": "animation.common.look_at_target",
+    "baby_transform": "animation.ocelot.baby_transform",
+    "baby_sit": "animation.cat.baby_sit",
+    "ghost_corpse": "animation.ghost.corpse.ocelot"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.ocelot.move"
+    },
+    {
+     "look_at_target": "controller.animation.ocelot.look_at_target"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.ocelot.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ],
+   "scripts": {
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   }
+  }
+ }
+}

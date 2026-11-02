@@ -1,0 +1,115 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.happy_ghast.ropes",
+    "texture_width": 64,
+    "texture_height": 64,
+    "visible_bounds_width": 10.0,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     2,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "body",
+     "pivot": [
+      0,
+      0,
+      0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -32.6,
+        -0.6,
+        -32.6
+       ],
+       "size": [
+        65.2,
+        65.2,
+        65.2
+       ],
+       "inflate": 0.2,
+       "uv": {
+        "north": {
+         "uv": [
+          16,
+          16
+         ],
+         "uv_size": [
+          16,
+          16
+         ]
+        },
+        "east": {
+         "uv": [
+          0,
+          16
+         ],
+         "uv_size": [
+          16,
+          16
+         ]
+        },
+        "south": {
+         "uv": [
+          48,
+          16
+         ],
+         "uv_size": [
+          16,
+          16
+         ]
+        },
+        "west": {
+         "uv": [
+          32,
+          16
+         ],
+         "uv_size": [
+          16,
+          16
+         ]
+        },
+        "up": {
+         "uv": [
+          16,
+          0
+         ],
+         "uv_size": [
+          16,
+          16
+         ]
+        },
+        "down": {
+         "uv": [
+          32,
+          16
+         ],
+         "uv_size": [
+          16,
+          -16
+         ]
+        }
+       }
+      }
+     ],
+     "parent": "ghost_root"
+    }
+   ]
+  }
+ ]
+}

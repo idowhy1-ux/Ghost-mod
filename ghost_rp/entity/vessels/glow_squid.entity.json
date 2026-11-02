@@ -1,0 +1,42 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_glow_squid",
+   "materials": {
+    "default": "glow_squid",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/glow_squid/glow_squid",
+    "baby": "textures/entity/glow_squid/glow_squid_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.glow_squid.default",
+    "baby": "geometry.ghost.glow_squid.baby",
+    "ghost_eyes": "geometry.ghost.glow_squid.eyes"
+   },
+   "animations": {
+    "move": "animation.squid.move",
+    "squid_rotate": "animation.squid.rotate",
+    "ghost_corpse": "animation.ghost.corpse.glow_squid",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "scripts": {
+    "animate": [
+     "move",
+     "squid_rotate",
+     "ghost_corpse_ctrl"
+    ],
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   },
+   "render_controllers": [
+    "controller.render.glow_squid.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}
