@@ -1,0 +1,12 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "ghost:body_leave",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/entity/ghost_eyes" },
+      "geometry": { "default": "geometry.ghost.empty" },
+      "render_controllers": [ "controller.render.default" ]
+    }
+  }
+}

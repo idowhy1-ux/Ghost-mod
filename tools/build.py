@@ -1,4 +1,4 @@
-"""Packages the add-on into dist/GhostMod.mcaddon (plus separate .mcpack files).
+"""Packages the add-on into dist/GhostModV2.mcaddon (plus separate .mcpack files).
 
 Run:  python3 tools/build.py
 Then open the .mcaddon on your phone/PC and Minecraft imports both packs.
@@ -8,7 +8,7 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
-PACKS = {"ghost_bp": "GhostMod_Behavior", "ghost_rp": "GhostMod_Resources"}
+PACKS = {"ghost_bp": "GhostModV2_Behavior", "ghost_rp": "GhostModV2_Resources"}
 
 
 def add_dir(zf, folder, arc_prefix):
@@ -21,7 +21,7 @@ def add_dir(zf, folder, arc_prefix):
 
 def main():
     os.makedirs(DIST, exist_ok=True)
-    addon = os.path.join(DIST, "GhostMod.mcaddon")
+    addon = os.path.join(DIST, "GhostModV2.mcaddon")
     with zipfile.ZipFile(addon, "w", zipfile.ZIP_DEFLATED) as zf:
         for folder, name in PACKS.items():
             add_dir(zf, os.path.join(ROOT, folder), f"{name}/")

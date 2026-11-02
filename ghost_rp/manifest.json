@@ -1,17 +1,17 @@
 {
   "format_version": 2,
   "header": {
-    "name": "Ghost Mod (Resources)",
-    "description": "Ghost visuals: transparent black & white ghost shroud, lost souls, gravestones and ghost tools.",
-    "uuid": "ce30a49e-bb04-4e9f-832f-58195dcab97b",
-    "version": [1, 0, 0],
-    "min_engine_version": [1, 21, 50]
+    "name": "Ghost Mod V2: Possession (Resources)",
+    "description": "See-through black & white ghosts with bright white glowing eyes, possessed mob bodies with glowing white eyes, corpses, lost souls and gravestones.",
+    "uuid": "3403b7c4-fbe5-4866-873f-fae9f30db91c",
+    "version": [2, 0, 0],
+    "min_engine_version": [1, 26, 0]
   },
   "modules": [
     {
       "type": "resources",
-      "uuid": "f25730c7-d402-402b-82d9-5996295a2882",
-      "version": [1, 0, 0]
+      "uuid": "27465e06-7328-4666-9803-3f0a005da4eb",
+      "version": [2, 0, 0]
     }
   ]
 }

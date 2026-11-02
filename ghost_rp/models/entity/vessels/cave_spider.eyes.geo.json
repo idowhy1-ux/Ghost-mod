@@ -1,0 +1,76 @@
+{
+ "format_version": "1.10.0",
+ "geometry.ghost.cave_spider.eyes": {
+  "texturewidth": 16,
+  "textureheight": 16,
+  "visible_bounds_width": 6,
+  "visible_bounds_height": 6,
+  "visible_bounds_offset": [
+   0,
+   1.5,
+   0
+  ],
+  "bones": [
+   {
+    "name": "ghost_root",
+    "pivot": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "name": "body0",
+    "pivot": [
+     0,
+     9,
+     0
+    ],
+    "parent": "ghost_root"
+   },
+   {
+    "name": "head",
+    "pivot": [
+     0,
+     9,
+     -3
+    ],
+    "parent": "body0",
+    "cubes": [
+     {
+      "origin": [
+       -3.0,
+       8.9,
+       -11.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     },
+     {
+      "origin": [
+       1.0,
+       8.9,
+       -11.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

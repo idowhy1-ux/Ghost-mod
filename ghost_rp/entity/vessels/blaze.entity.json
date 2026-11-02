@@ -1,0 +1,46 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_blaze",
+   "materials": {
+    "body": "blaze_body",
+    "head": "blaze_head",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/blaze",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.blaze.default",
+    "ghost_eyes": "geometry.ghost.blaze.eyes"
+   },
+   "animations": {
+    "look_at_target": "animation.common.look_at_target",
+    "move": "animation.blaze.move",
+    "ghost_corpse": "animation.ghost.corpse.blaze"
+   },
+   "particle_effects": {
+    "charged_flames": "minecraft:mobflame_emitter"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.blaze.move"
+    },
+    {
+     "flame": "controller.animation.blaze.flame"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.blaze",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

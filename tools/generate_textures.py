@@ -1,4 +1,4 @@
-"""Generates all Ghost Mod textures (black & white, semi-transparent).
+"""Generates all Ghost Mod V2 textures (black & white, semi-transparent, glowing white eyes).
 
 Run:  python3 tools/generate_textures.py
 Requires Pillow.  Edit the pixel maps below to restyle anything.
@@ -25,35 +25,50 @@ def gray(v, a=255):
 
 
 # ---------------------------------------------------------------- shroud
-# Standard 64x64 skin-style layout, translucent, fading out toward the feet.
+# Standard 64x64 skin-style layout. A black & white wraith: a dark smoky hood
+# and robe with white wisps, fading into a misty white tail. The bright white
+# glowing eyes are a separate emissive layer (geometry.ghost_shroud.eyes).
 def ghost_shroud():
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     px = img.load()
 
-    def fill(x0, y0, w, h, base=225, alpha=150, fade=False):
+    def fill(x0, y0, w, h, top, bottom, a_top, a_bottom, noise=14):
         for y in range(y0, y0 + h):
+            t = (y - y0) / max(1, h - 1)
             for x in range(x0, x0 + w):
-                a = alpha
-                if fade:
-                    t = (y - y0) / max(1, h - 1)
-                    a = alpha * (1.0 - 0.85 * t)
-                px[x, y] = gray(base + random.randint(-18, 12), a + random.randint(-12, 12))
+                v = top + (bottom - top) * t + random.randint(-noise, noise)
+                a = a_top + (a_bottom - a_top) * t + random.randint(-10, 10)
+                px[x, y] = gray(v, a)
 
-    fill(0, 0, 32, 16, 235, 165)            # head (all faces)
-    fill(16, 16, 24, 16, 215, 145)          # body
-    fill(40, 16, 16, 16, 205, 135)          # arms
-    fill(0, 16, 16, 16, 200, 120, fade=True)  # legs -> wispy tail
-
-    # face on the head front (8,8)-(16,16): hollow black eyes and mouth
-    for (x, y) in [(9, 11), (10, 11), (9, 12), (10, 12), (13, 11), (14, 11), (13, 12), (14, 12)]:
-        px[x, y] = gray(10, 235)
-    for (x, y) in [(11, 14), (12, 14), (11, 15), (12, 15)]:
-        px[x, y] = gray(25, 220)
-    # shadowy torn hem lines on the body front
-    for x in range(20, 28):
+    fill(0, 0, 32, 16, 52, 40, 215, 215)          # hood (all faces), near-black
+    for x in range(0, 32):                         # pale rim along the hood edges
+        if random.random() < 0.6:
+            px[x, 8] = gray(150, 200)
+    fill(16, 16, 24, 16, 55, 150, 200, 135)        # robe: black at the top -> grey
+    fill(40, 16, 16, 16, 60, 120, 190, 120)        # sleeves
+    fill(0, 16, 16, 16, 175, 235, 150, 10, 10)     # legs -> white mist tail
+    # white wisps streaming down the robe and sleeves
+    for x in list(range(16, 40)) + list(range(40, 56)):
+        if random.random() < 0.3:
+            for y in range(20 + random.randint(0, 4), 32):
+                if random.random() < 0.8:
+                    px[x, y] = gray(225, 150)
+    # tattered sleeve ends
+    for x in range(40, 56):
         if random.random() < 0.5:
-            px[x, 31] = gray(120, 90)
+            px[x, 31] = (0, 0, 0, 0)
+    # face (head front 8..16, 8..16): a black void inside the hood
+    for y in range(9, 16):
+        for x in range(9, 15):
+            px[x, y] = gray(6, 245)
+    for (x, y) in [(9, 11), (10, 11), (13, 11), (14, 11)]:   # faint glow under the eyes
+        px[x, y] = gray(70, 245)
     save(img, RP, "textures", "models", "ghost_shroud.png")
+
+
+# Pure white texture used by every glowing eye layer.
+def ghost_eyes():
+    save(Image.new("RGBA", (16, 16), (255, 255, 255, 255)), RP, "textures", "entity", "ghost_eyes.png")
 
 
 # ------------------------------------------------------------- lost soul
@@ -64,18 +79,16 @@ def lost_soul():
     def fill(x0, y0, w, h, base, alpha):
         for y in range(y0, y0 + h):
             for x in range(x0, x0 + w):
-                px[x, y] = gray(base + random.randint(-20, 10), alpha + random.randint(-15, 10))
+                px[x, y] = gray(base + random.randint(-18, 18), alpha + random.randint(-15, 10))
 
-    fill(0, 0, 24, 12, 240, 170)   # head
-    fill(24, 0, 16, 6, 220, 140)   # arms
-    fill(0, 12, 20, 10, 225, 150)  # torso
-    fill(20, 12, 14, 7, 210, 110)  # tail 1
-    fill(34, 12, 8, 5, 200, 70)    # tail 2
-    # face (head front at 6,6 - 12,12)
-    for (x, y) in [(7, 8), (7, 9), (10, 8), (10, 9)]:
-        px[x, y] = gray(5, 240)
-    for (x, y) in [(8, 10), (9, 10), (8, 11), (9, 11)]:
-        px[x, y] = gray(30, 220)
+    fill(0, 0, 24, 12, 90, 175)    # head
+    fill(24, 0, 16, 6, 120, 140)   # arms
+    fill(0, 12, 20, 10, 110, 150)  # torso
+    fill(20, 12, 14, 7, 170, 110)  # tail 1
+    fill(34, 12, 8, 5, 215, 70)    # tail 2 (white wisp)
+    for y in range(7, 12):         # black face under the glowing eyes
+        for x in range(6, 12):
+            px[x, y] = gray(8, 235)
     save(img, RP, "textures", "entity", "lost_soul.png")
 
 
@@ -240,20 +253,56 @@ ICONS = {
     ],
     "ghost_shroud": [
         "................",
-        ".....wwwwww.....",
-        "....wWWWWWWw....",
-        "...wWWWWWWWWw...",
-        "...wWKKWWKKWw...",
-        "...wWKKWWKKWw...",
-        "...wWWWWWWWWw...",
-        "...wWWWKKWWWw...",
-        "...wWWWKKWWWw...",
-        "...wWWWWWWWWw...",
-        "...wWWWWWWWWw...",
-        "...wWWWWWWWWw...",
-        "...wWwWWwWWwW...",
+        ".....DDDDDD.....",
+        "....DGGGGGGD....",
+        "...DGKKKKKKGD...",
+        "...DGKKKKKKGD...",
+        "...DKWWKKWWKD...",
+        "...DGKKKKKKGD...",
+        "...DGGKKKKGGD...",
+        "...DDGGGGGGDD...",
+        "...DGGLGGLGGD...",
+        "...GLGGLGGLGG...",
+        "...LGLLGLLGLL...",
+        "...wLwLLwLwLw...",
         "...w.w.ww.w.w...",
         "...g...g..g..g..",
+        "................",
+    ],
+    "body_power": [
+        "................",
+        "......gggg......",
+        "....gwwwwwwg....",
+        "...gwDDDDDDwg...",
+        "..gwDKKKKKKDwg..",
+        "..wDKWWKKWWKDw..",
+        ".gwDKWWKKWWKDwg.",
+        ".gwDKKKKKKKKDwg.",
+        "..wDDKKKKKKDDw..",
+        "..gwDDDDDDDDwg..",
+        "...gwwDDDDwwg...",
+        "....ggwwwwgg....",
+        "......gggg......",
+        ".......gg.......",
+        "................",
+        "................",
+    ],
+    "body_leave": [
+        ".......WW.......",
+        "......WWWW......",
+        ".....WW..WW.....",
+        "....W.wwww.W....",
+        ".....wWKWKWw....",
+        ".....wWWWWWw....",
+        ".....wWWWWWw....",
+        "......wgwgw.....",
+        ".......g.g......",
+        "....DDDDDDDD....",
+        "...DGGGGGGGGD...",
+        "...DGKKGGKKGD...",
+        "...DGGGGGGGGD...",
+        "...DDDDDDDDDD...",
+        "..DD........DD..",
         "................",
     ],
 }
@@ -271,25 +320,30 @@ def items():
 
 # ---------------------------------------------------------- pack icons
 def pack_icon():
-    img = Image.new("RGBA", (128, 128), (18, 18, 22, 255))
+    img = Image.new("RGBA", (128, 128), (14, 14, 18, 255))
     d = ImageDraw.Draw(img)
-    for r in range(60, 0, -4):  # soft glow
-        v = 18 + (60 - r)
-        d.ellipse([64 - r, 60 - r, 64 + r, 60 + r], fill=(v, v, v + 4, 255))
-    # ghost body
-    d.ellipse([34, 18, 94, 78], fill=(235, 235, 235, 255))
-    d.rectangle([34, 48, 94, 100], fill=(235, 235, 235, 255))
-    for i, x in enumerate(range(34, 94, 12)):
-        d.polygon([(x, 100), (x + 6, 112 if i % 2 == 0 else 106), (x + 12, 100)], fill=(235, 235, 235, 255))
-    d.ellipse([46, 42, 58, 58], fill=(10, 10, 10, 255))
-    d.ellipse([70, 42, 82, 58], fill=(10, 10, 10, 255))
-    d.ellipse([58, 66, 70, 82], fill=(25, 25, 25, 255))
+    for r in range(64, 0, -4):  # misty glow
+        v = 14 + (64 - r) // 2
+        d.ellipse([64 - r, 58 - r, 64 + r, 58 + r], fill=(v, v, v + 3, 255))
+    # tattered white robe tail
+    for i, x in enumerate(range(30, 98, 8)):
+        d.polygon([(x, 92), (x + 4, 120 - (i % 3) * 6), (x + 8, 92)], fill=(225, 225, 225, 255))
+    d.rectangle([30, 62, 98, 94], fill=(205, 205, 205, 255))
+    # black hood
+    d.ellipse([30, 14, 98, 82], fill=(30, 30, 34, 255))
+    d.rectangle([30, 48, 98, 70], fill=(30, 30, 34, 255))
+    d.ellipse([40, 26, 88, 74], fill=(4, 4, 6, 255))
+    # bright white glowing eyes
+    for cx in (52, 76):
+        d.ellipse([cx - 9, 40, cx + 9, 58], fill=(70, 70, 80, 255))
+        d.ellipse([cx - 6, 43, cx + 6, 55], fill=(255, 255, 255, 255))
     save(img, RP, "pack_icon.png")
     save(img, BP, "pack_icon.png")
 
 
 if __name__ == "__main__":
     ghost_shroud()
+    ghost_eyes()
     lost_soul()
     gravestone()
     items()

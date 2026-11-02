@@ -1,0 +1,42 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_bat",
+   "materials": {
+    "default": "bat_v2",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/bat_v2",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.bat.default",
+    "ghost_eyes": "geometry.ghost.bat.eyes"
+   },
+   "scripts": {
+    "scale": "1.0"
+   },
+   "animations": {
+    "resting": "animation.bat.resting",
+    "flying": "animation.bat.flying",
+    "ghost_corpse": "animation.ghost.corpse.bat"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.bat.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.bat",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,464 @@
+{
+ "format_version": "1.8.0",
+ "animations": {
+  "animation.ghost.corpse.zombie": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.husk": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.skeleton": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.stray": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.wither_skeleton": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.creeper": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.spider": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      13,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.cave_spider": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      13,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.enderman": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.blaze": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.ghast": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      68,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.witch": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.phantom": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      26.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.evoker": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.iron_golem": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      13.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.wolf": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.fox": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.pig": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      5.5,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.cow": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.sheep": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      5.75,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.chicken": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.rabbit": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      4,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.goat": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      6,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.polar_bear": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      7.0,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.bee": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      9,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.bat": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      180
+     ],
+     "position": [
+      0,
+      13,
+      0
+     ]
+    }
+   }
+  },
+  "animation.ghost.corpse.villager": {
+   "loop": "hold_on_last_frame",
+   "bones": {
+    "ghost_root": {
+     "rotation": [
+      0,
+      0,
+      90
+     ],
+     "position": [
+      0,
+      8.1,
+      0
+     ]
+    }
+   }
+  }
+ }
+}

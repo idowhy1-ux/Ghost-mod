@@ -1,0 +1,92 @@
+{
+ "format_version": "1.21.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.ghost.goat.eyes",
+    "texture_width": 16,
+    "texture_height": 16,
+    "visible_bounds_width": 6,
+    "visible_bounds_height": 6,
+    "visible_bounds_offset": [
+     0,
+     1.5,
+     0
+    ]
+   },
+   "bones": [
+    {
+     "name": "ghost_root",
+     "pivot": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "head",
+     "pivot": [
+      0.5,
+      17,
+      -8
+     ],
+     "parent": "ghost_root",
+     "cubes": [
+      {
+       "origin": [
+        -1.25,
+        18.35,
+        -16.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "rotation": [
+        55,
+        0,
+        0
+       ],
+       "pivot": [
+        1,
+        18,
+        -8
+       ]
+      },
+      {
+       "origin": [
+        1.25,
+        18.35,
+        -16.2
+       ],
+       "size": [
+        1,
+        1,
+        0.1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "rotation": [
+        55,
+        0,
+        0
+       ],
+       "pivot": [
+        1,
+        18,
+        -8
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

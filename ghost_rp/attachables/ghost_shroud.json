@@ -5,19 +5,22 @@
       "identifier": "ghost:ghost_shroud",
       "materials": {
         "default": "entity_alphablend",
-        "enchanted": "entity_alphablend"
+        "enchanted": "entity_alphablend",
+        "ghost_eyes": "breeze_eyes"
       },
       "textures": {
         "default": "textures/models/ghost_shroud",
-        "enchanted": "textures/misc/enchanted_item_glint"
+        "enchanted": "textures/misc/enchanted_item_glint",
+        "ghost_eyes": "textures/entity/ghost_eyes"
       },
       "geometry": {
-        "default": "geometry.ghost_shroud"
+        "default": "geometry.ghost_shroud",
+        "ghost_eyes": "geometry.ghost_shroud.eyes"
       },
       "scripts": {
         "parent_setup": "variable.chest_layer_visible = 0.0;"
       },
-      "render_controllers": [ "controller.render.ghost_shroud" ]
+      "render_controllers": [ "controller.render.ghost_shroud", "controller.render.ghost_eyes" ]
     }
   }
 }

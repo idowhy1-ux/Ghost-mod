@@ -1,0 +1,60 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_fox",
+   "materials": {
+    "default": "fox",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "red": "textures/entity/fox/fox",
+    "arctic": "textures/entity/fox/arctic_fox",
+    "baby_red": "textures/entity/fox/fox_baby",
+    "baby_arctic": "textures/entity/fox/fox_snow_baby",
+    "baby_sleep_red": "textures/entity/fox/fox_sleep_baby",
+    "baby_sleep_arctic": "textures/entity/fox/fox_snow_sleep_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.fox.default",
+    "baby": "geometry.ghost.fox.baby",
+    "ghost_eyes": "geometry.ghost.fox.eyes"
+   },
+   "animations": {
+    "walk": "animation.quadruped.walk",
+    "look_at_target": "animation.common.look_at_target",
+    "baby_transform": "animation.fox.baby_transform",
+    "crouch": "animation.fox.crouch",
+    "sleep": "animation.fox.sleep",
+    "setup": "animation.fox.setup",
+    "sit": "animation.fox.sit",
+    "wiggle": "animation.fox.wiggle",
+    "stuck": "animation.fox.stuck",
+    "pounce": "animation.fox.pounce",
+    "move": "controller.animation.fox.move",
+    "baby_walk": "animation.fox.baby_walk",
+    "baby_pounce": "animation.fox.baby_pounce",
+    "baby_sit": "animation.fox.baby_sit",
+    "baby_sleep": "animation.fox.baby_sleep",
+    "baby_wiggle": "animation.fox.baby_wiggle",
+    "ghost_corpse": "animation.ghost.corpse.fox",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "scripts": {
+    "animate": [
+     "setup",
+     "move",
+     "ghost_corpse_ctrl"
+    ],
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   },
+   "render_controllers": [
+    "controller.render.fox.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

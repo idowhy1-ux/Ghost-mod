@@ -1,0 +1,86 @@
+{
+ "format_version": "1.8.0",
+ "geometry.ghost.phantom.eyes": {
+  "texturewidth": 16,
+  "textureheight": 16,
+  "visible_bounds_width": 6,
+  "visible_bounds_height": 6,
+  "visible_bounds_offset": [
+   0,
+   1.5,
+   0
+  ],
+  "bones": [
+   {
+    "name": "ghost_root",
+    "pivot": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "name": "body",
+    "pivot": [
+     0.0,
+     24.0,
+     0.0
+    ],
+    "parent": "ghost_root",
+    "bind_pose_rotation": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "name": "head",
+    "pivot": [
+     0.0,
+     23.0,
+     -7.0
+    ],
+    "parent": "body",
+    "bind_pose_rotation": [
+     11.5,
+     0.0,
+     0.0
+    ],
+    "cubes": [
+     {
+      "origin": [
+       -3.25,
+       23.15,
+       -12.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     },
+     {
+      "origin": [
+       0.25,
+       23.15,
+       -12.2
+      ],
+      "size": [
+       2,
+       1,
+       0.1
+      ],
+      "uv": [
+       0,
+       0
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

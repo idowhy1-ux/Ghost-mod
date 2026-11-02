@@ -1,10 +1,16 @@
 {
-  "format_version": "1.8.0",
+  "format_version": "1.10.0",
   "render_controllers": {
     "controller.render.ghost_shroud": {
       "geometry": "Geometry.default",
       "materials": [ { "*": "Material.default" } ],
       "textures": [ "Texture.default" ]
+    },
+    "controller.render.ghost_eyes": {
+      "geometry": "Geometry.ghost_eyes",
+      "materials": [ { "*": "Material.ghost_eyes" } ],
+      "textures": [ "Texture.ghost_eyes" ],
+      "ignore_lighting": true
     }
   }
 }

@@ -1,0 +1,41 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_spider",
+   "materials": {
+    "default": "spider",
+    "invisible": "spider_invisible",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/spider/spider",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.spider.default",
+    "ghost_eyes": "geometry.ghost.spider.eyes"
+   },
+   "animations": {
+    "default_leg_pose": "animation.spider.default_leg_pose",
+    "look_at_target": "animation.spider.look_at_target",
+    "walk": "animation.spider.walk",
+    "ghost_corpse": "animation.ghost.corpse.spider"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.spider.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.spider",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

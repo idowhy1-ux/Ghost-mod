@@ -1,0 +1,20 @@
+{
+  "format_version": "1.20.80",
+  "minecraft:item": {
+    "description": {
+      "identifier": "ghost:body_leave",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": {
+        "texture": "ghost_body_leave"
+      },
+      "minecraft:display_name": {
+        "value": "\u00a7fLeave Body"
+      },
+      "minecraft:max_stack_size": 1
+    }
+  }
+}

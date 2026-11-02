@@ -1,0 +1,48 @@
+{
+ "format_version": "1.10.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_sheep",
+   "materials": {
+    "default": "sheep",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/sheep/sheep",
+    "baby": "textures/entity/sheep/sheep_baby",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.sheep.default",
+    "sheared": "geometry.ghost.sheep.sheared",
+    "baby": "geometry.ghost.sheep.baby",
+    "ghost_eyes": "geometry.ghost.sheep.eyes"
+   },
+   "animations": {
+    "setup": "animation.sheep.setup.v2",
+    "grazing": "animation.sheep.grazing.v2",
+    "walk": "animation.quadruped.walk",
+    "look_at_target": "animation.common.look_at_target",
+    "baby_transform": "animation.sheep.baby_transform",
+    "move": "controller.animation.sheep.move",
+    "baby_grazing": "animation.sheep.baby_grazing",
+    "ghost_corpse": "animation.ghost.corpse.sheep",
+    "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+   },
+   "scripts": {
+    "animate": [
+     "look_at_target",
+     "move",
+     "ghost_corpse_ctrl"
+    ],
+    "scale": "query.is_baby ? 2.0 : 1.0"
+   },
+   "render_controllers": [
+    "controller.render.sheep.v2",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}

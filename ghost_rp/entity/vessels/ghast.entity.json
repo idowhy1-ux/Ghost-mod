@@ -1,0 +1,40 @@
+{
+ "format_version": "1.8.0",
+ "minecraft:client_entity": {
+  "description": {
+   "identifier": "ghost:vessel_ghast",
+   "materials": {
+    "default": "ghast",
+    "ghost_eyes": "breeze_eyes"
+   },
+   "textures": {
+    "default": "textures/entity/ghast/ghast",
+    "shooting": "textures/entity/ghast/ghast_shooting",
+    "ghost_eyes": "textures/entity/ghost_eyes"
+   },
+   "geometry": {
+    "default": "geometry.ghost.ghast.default",
+    "ghost_eyes": "geometry.ghost.ghast.eyes"
+   },
+   "animations": {
+    "move": "animation.ghast.move",
+    "scale": "animation.ghast.scale",
+    "ghost_corpse": "animation.ghost.corpse.ghast"
+   },
+   "animation_controllers": [
+    {
+     "move": "controller.animation.ghast.move"
+    },
+    {
+     "ghost_corpse_ctrl": "controller.animation.ghost.corpse"
+    }
+   ],
+   "render_controllers": [
+    "controller.render.ghast",
+    {
+     "controller.render.ghost_eyes": "!query.property('ghost:corpse')"
+    }
+   ]
+  }
+ }
+}
